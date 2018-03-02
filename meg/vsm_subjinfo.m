@@ -1,4 +1,4 @@
-function [subject] = streams_subjinfo(name)
+function [subject] = vsm_subjinfo(name)
 
 % STREAMS_SUBJINFO gets the subject specific information
 %

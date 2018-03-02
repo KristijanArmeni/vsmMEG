@@ -1,4 +1,4 @@
-function [data, eeg, audio, featuredata] = streams_preprocessing(subject, inpcfg)
+function [data, eeg, audio, featuredata] = vsm_preprocessing(subject, inpcfg)
 
 % streams_preprocessing() 
 
