@@ -492,24 +492,8 @@ else
   end
 end
 
-% get eogv unmixing/mixing matrices
-[avgcomp, avgpre, avgeog, mixing, unmixing] = streams_artifact_eog_dss_blinks(subject);
-subject.eogv_dss.mixing   = mixing;
-subject.eogv_dss.unmixing = unmixing;
-subject.eogv_dss.avgcomp  = avgcomp;
-subject.eogv_dss.avgpre   = avgpre;
-subject.eogv_dss.avgeog   = avgeog;
-
-% get eogv unmixing/mixing matrices, based on a fastica decomposition ->
-% the dss stuff produces poor results, to be understood in more detail
-[avgcomp, avgpre, avgeog, mixing, unmixing] = streams_artifact_eog_fastica_blinks(subject);
-subject.eogv.mixing   = mixing;
-subject.eogv.unmixing = unmixing;
-subject.eogv.avgcomp  = avgcomp;
-subject.eogv.avgpre   = avgpre;
-subject.eogv.avgeog   = avgeog;
-
-
+% Do component analysis per story
+subject.comp = vsm_fastica(subject);
 
 % estimate the delay between the audio signal in the data, and the wav-file
 delay         = streams_audiodelay(subject);
