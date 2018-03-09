@@ -13,6 +13,8 @@ if iscell(name)
   return;
 end
 
+vsmdir = vsm_dir();
+
 subject.name = name;
 subjectdir = sprintf('sub-%0.3d', str2double(name(2:end)));
 
@@ -496,7 +498,13 @@ end
 subject.ica.comp    = vsm_fastica(subject);
 
 % Load selected components
-subject.ica.compsel = vsm_selectica(subject);
+compsel = fullfile(vsmdir.preproc, [subject.name '_compsel.mat']);
+if exist(compsel, 'file')
+    load(compsel);
+    subject.ica.compsel = compsel;
+else
+    subject.ica.compsel = [];
+end
 
 % estimate the delay between the audio signal in the data, and the wav-file
 delay         = streams_audiodelay(subject);
