@@ -10,7 +10,7 @@ addpath('/opt/matlab/R2014b/toolbox/signal/signal');
 %% INITIALIZE
 
 if ischar(subject)
-  subject = streams_subjinfo(subject);
+  subject = vsm_subjinfo(subject);
 end
 
 % make a local version of the variable input arguments
@@ -83,22 +83,22 @@ if iscell(subject.dataset)
   for k = 1:numel(subject.dataset)
     trl     = cat(1, trl, subject.trl{k});
     dataset = cat(1, dataset, repmat(subject.dataset(k), [size(subject.trl{k},1) 1])); 
-    mixing    = cat(1, mixing,    repmat(subject.eogv.mixing(k), [size(subject.trl{k},1) 1]));
-    unmixing  = cat(1, unmixing,  repmat(subject.eogv.unmixing(k), [size(subject.trl{k},1) 1]));
-    badcomps  = cat(1, badcomps,  repmat(subject.eogv.badcomps(k), [size(subject.trl{k},1) 1]));
+    %mixing    = cat(1, mixing,    repmat(subject.eogv.mixing(k), [size(subject.trl{k},1) 1]));
+    %unmixing  = cat(1, unmixing,  repmat(subject.eogv.unmixing(k), [size(subject.trl{k},1) 1]));
+    %badcomps  = cat(1, badcomps,  repmat(subject.eogv.badcomps(k), [size(subject.trl{k},1) 1]));
     
   end
   trl     = trl(seltrl,:);
   dataset = dataset(seltrl);
-  mixing  = mixing(seltrl);
-  unmixing = unmixing(seltrl);
-  badcomps = badcomps(seltrl);
+  %mixing  = mixing(seltrl);
+  %unmixing = unmixing(seltrl);
+  %badcomps = badcomps(seltrl);
 else
   dataset = repmat({subject.dataset}, [numel(seltrl) 1]);
   trl     = subject.trl(seltrl,:);
-  mixing    = repmat({subject.eogv.mixing},   [numel(seltrl) 1]);
-  unmixing  = repmat({subject.eogv.unmixing}, [numel(seltrl) 1]);
-  badcomps  = repmat({subject.eogv.badcomps}, [numel(seltrl) 1]);
+  %mixing    = repmat({subject.eogv.mixing},   [numel(seltrl) 1]);
+  %unmixing  = repmat({subject.eogv.unmixing}, [numel(seltrl) 1]);
+  %badcomps  = repmat({subject.eogv.badcomps}, [numel(seltrl) 1]);
 
 end
 
@@ -235,6 +235,13 @@ for k = 1:numel(seltrl)
     data            = ft_denoise_sns(cfg, data);
   end
 
+  % Remove eye-related artifacts
+  
+  fprintf('Removing ICA components for story %d ...\n\n', k);
+  
+  cfg           = [];
+  cfg.component = sort([subject.ica.compsel{k}.eye, subject.ica.compsel{k}.heart]); % select badcomponents for this story
+  data          = ft_rejectcomponent(cfg, subject.ica.comp{k}, data);
   
 %% LOW PASS FILTERING
   
