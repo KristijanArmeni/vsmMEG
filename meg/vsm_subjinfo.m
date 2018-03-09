@@ -8,7 +8,7 @@ function [subject] = vsm_subjinfo(name)
 
 if iscell(name)
   for k = 1:numel(name)
-    subject(k,1) = streams_subjinfo(name{k});
+    subject(k,1) = vsm_subjinfo(name{k});
   end
   return;
 end
@@ -493,7 +493,10 @@ else
 end
 
 % Do component analysis per story
-subject.comp = vsm_fastica(subject);
+subject.ica.comp    = vsm_fastica(subject);
+
+% Load selected components
+subject.ica.compsel = vsm_selectica(subject);
 
 % estimate the delay between the audio signal in the data, and the wav-file
 delay         = streams_audiodelay(subject);
