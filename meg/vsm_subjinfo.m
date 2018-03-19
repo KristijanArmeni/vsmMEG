@@ -525,21 +525,22 @@ end
 
 % add preproc data info, if they exist
 
+subject.preproc.meg         = [];
+subject.preproc.aud         = [];
+subject.preproc.lng         = [];
+subject.anatomy.leadfield   = [];
+subject.anatomy.headmodel   = [];
+
 megpreproc = fullfile(vsmdir.preproc, [subject.name, '_meg.mat']);
 audpreproc = fullfile(vsmdir.preproc, [subject.name, '_aud.mat']);
 lngpreproc = fullfile(vsmdir.preproc, [subject.name, '_aud.mat']);
-if exist(megpreproc, 'file')
-    subject.preproc.meg = megpreproc;
-else
-    subject.preproc.meg = [];
-end
+headmodel  = fullfile(vsmdir.anatomy, [subject.name, '_headmodel.mat']);
+leadfield  = fullfile(vsmdir.anatomy, [subject.name, '_leadfield.mat']);
 
-if exist(audpreproc, 'file') && exist(lngpreproc, 'file')
-    subject.preproc.aud = audpreproc;
-    subject.preproc.lng = lngpreproc;
-else
-    subject.preproc.aud = [];
-    subject.preproc.lng = [];
-end
+if exist(megpreproc, 'file') == 2; subject.preproc.meg = megpreproc; end
+if exist(audpreproc, 'file') == 2; subject.preproc.aud = audpreproc; end
+if exist(lngpreproc, 'file') == 2; subject.preproc.lng = lngpreproc; end
+if exist(headmodel, 'file') == 2; subject.anatomy.headmodel = headmodel; end
+if exist(leadfield, 'file') == 2; subject.anatomy.leadfield = leadfield; end;
 
 end
