@@ -520,5 +520,26 @@ if isfield(subject, 'delay')
       subject.trl{m}(:,3) = -round(subject.delay(cnt+(1:size(subject.trl{m},1))).*(1200/1000));
       cnt = cnt + size(subject.trl{m},1);
     end
-  end    
+  end
+end
+
+% add preproc data info, if they exist
+
+megpreproc = fullfile(vsmdir.preproc, [subject.name, '_meg.mat']);
+audpreproc = fullfile(vsmdir.preproc, [subject.name, '_aud.mat']);
+lngpreproc = fullfile(vsmdir.preproc, [subject.name, '_aud.mat']);
+if exist(megpreproc, 'file')
+    subject.preproc.meg = megpreproc;
+else
+    subject.preproc.meg = [];
+end
+
+if exist(audpreproc, 'file') && exist(lngpreproc, 'file')
+    subject.preproc.aud = audpreproc;
+    subject.preproc.lng = lngpreproc;
+else
+    subject.preproc.aud = [];
+    subject.preproc.lng = [];
+end
+
 end
