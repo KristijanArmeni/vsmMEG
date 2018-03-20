@@ -1,4 +1,4 @@
-function [data, eeg, audio, featuredata] = vsm_preprocessing(subject, inpcfg)
+function [data, audio, featuredata] = vsm_preprocessing(subject, inpcfg)
 
 % streams_preprocessing() 
 
@@ -158,9 +158,9 @@ for k = 1:numel(seltrl)
   % meg
   data           = ft_preprocessing(cfg); % read in the MEG data
   
-  % eog channel
-  cfg.channel = {'EEG057', 'EEG058', 'EEG059'};
-  eeg        = ft_preprocessing(cfg);
+%   eog channel
+%   cfg.channel = {'EEG057', 'EEG058', 'EEG059'};
+%   eeg        = ft_preprocessing(cfg);
   
   % audio channel
   if strcmp(filter_audio, 'no')
@@ -216,12 +216,11 @@ for k = 1:numel(seltrl)
 %% ARTIFACT REJECTION
   
   % reject muscle & SQUID artifacts
-  cfg                  = [];
-  cfg.artfctdef        = subject.artfctdef;
-  cfg.artfctdef.reject = 'nan';
+  cfg                        = [];
+  cfg.artfctdef              = subject.artfctdef;
+  cfg.artfctdef.reject       = 'nan';
   cfg.artfctdef.minaccepttim = 2;
   data        = ft_rejectartifact(cfg, data);
-  eeg         = ft_rejectartifact(cfg, eeg);
   audio       = ft_rejectartifact(cfg, audio);
   
   % sensor noise suppression
@@ -252,7 +251,6 @@ for k = 1:numel(seltrl)
     cfg.lpfilttype = 'firws';
     cfg.usefftfilt = 'yes';
     data = ft_preprocessing(cfg, data);
-    eeg = ft_preprocessing(cfg, eeg);
   end
   
   %% RESAMPLING
@@ -263,7 +261,6 @@ for k = 1:numel(seltrl)
     for kk = 1:numel(data.trial)
       firsttimepoint(kk,1) = data.time{kk}(1);
       data.time{kk}        = data.time{kk}-data.time{kk}(1);
-      eeg.time{kk}         = eeg.time{kk}-eeg.time{kk}(1);
       audio.time{kk}       = audio.time{kk}-audio.time{kk}(1);
     end
     
@@ -272,14 +269,12 @@ for k = 1:numel(seltrl)
     cfg.detrend = 'no';
     cfg.resamplefs = fsample;
     data        = ft_resampledata(cfg, data);
-    eeg         = ft_resampledata(cfg, eeg);
     audio       = ft_resampledata(cfg, audio);
     
     % add back the first time point, so that the relative time axis
     % corresponds again with the timing in combineddata
     for kk = 1:numel(data.trial)
       data.time{kk}  = data.time{kk} + firsttimepoint(kk);
-      eeg.time{kk}   = eeg.time{kk} + firsttimepoint(kk);
       audio.time{kk} = audio.time{kk} + firsttimepoint(kk);
     end
   end
@@ -344,9 +339,8 @@ for k = 1:numel(seltrl)
     tmpfeature{k}  = featuredata;
   end
   tmpdata{k}  = data;
-  tmpeeg{k}   = eeg;
   tmpaudio{k} = audio;
-  clear data eeg audio;
+  clear data audio;
   
 end
 
@@ -355,7 +349,6 @@ end
 if numel(tmpdata) > 1
     
   data        = ft_appenddata([], tmpdata{:});
-  eeg         = ft_appenddata([], tmpeeg{:});
   audio       = ft_appenddata([], tmpaudio{:});
   
   if dofeature
@@ -365,7 +358,6 @@ if numel(tmpdata) > 1
 else
     
   data        = tmpdata{1};
-  eeg         = tmpeeg{1};
   audio       = tmpaudio{1};
   
   if dofeature
@@ -373,7 +365,7 @@ else
   end
   
 end
-clear tmpdata tmpaudio tmpeeg tmpfeature
+clear tmpdata tmpaudio tmpfeature
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS           %
