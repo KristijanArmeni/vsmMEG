@@ -220,8 +220,8 @@ for k = 1:numel(seltrl)
   cfg.artfctdef              = subject.artfctdef;
   cfg.artfctdef.reject       = 'nan';
   cfg.artfctdef.minaccepttim = 2;
-  data        = ft_rejectartifact(cfg, data);
-  audio       = ft_rejectartifact(cfg, audio);
+  data                       = ft_rejectartifact(cfg, data);
+  audio                      = ft_rejectartifact(cfg, audio);
   
   % sensor noise suppression
   if dosns
@@ -238,19 +238,20 @@ for k = 1:numel(seltrl)
   
   fprintf('Removing ICA components for story %d ...\n\n', k);
   
-  cfg           = [];
-  cfg.component = sort([subject.ica.compsel{k}.eye, subject.ica.compsel{k}.heart]); % select badcomponents for this story
-  data          = ft_rejectcomponent(cfg, subject.ica.comp{k}, data);
+  cfg            = [];
+  cfg.component  = sort([subject.ica.compsel{k}.eye, subject.ica.compsel{k}.heart]); % select badcomponents for this story
+  cfg.updatesens = 'no';
+  data           = ft_rejectcomponent(cfg, subject.ica.comp{k}, data);
   
 %% LOW PASS FILTERING
   
   if ~isempty(lpfreq)
-    cfg = [];
-    cfg.lpfreq = lpfreq;
-    cfg.lpfilter = 'yes';
+    cfg            = [];
+    cfg.lpfreq     = lpfreq;
+    cfg.lpfilter   = 'yes';
     cfg.lpfilttype = 'firws';
     cfg.usefftfilt = 'yes';
-    data = ft_preprocessing(cfg, data);
+    data           = ft_preprocessing(cfg, data);
   end
   
   %% RESAMPLING
@@ -264,12 +265,12 @@ for k = 1:numel(seltrl)
       audio.time{kk}       = audio.time{kk}-audio.time{kk}(1);
     end
     
-    cfg = [];
-    cfg.demean  = 'no';
-    cfg.detrend = 'no';
+    cfg            = [];
+    cfg.demean     = 'no';
+    cfg.detrend    = 'no';
     cfg.resamplefs = fsample;
-    data        = ft_resampledata(cfg, data);
-    audio       = ft_resampledata(cfg, audio);
+    data           = ft_resampledata(cfg, data);
+    audio          = ft_resampledata(cfg, audio);
     
     % add back the first time point, so that the relative time axis
     % corresponds again with the timing in combineddata
@@ -347,7 +348,7 @@ end
 %% APPENDING FOR OUPUT
 
 if numel(tmpdata) > 1
-    
+  
   data        = ft_appenddata([], tmpdata{:});
   audio       = ft_appenddata([], tmpaudio{:});
   
