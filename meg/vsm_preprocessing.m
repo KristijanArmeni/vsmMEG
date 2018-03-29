@@ -311,10 +311,22 @@ for k = 1:numel(seltrl)
       [vecmat, words]    = vsm_readvectors(vector_file);
       
       vec2dist_selection = [combineddata(:).iscontent]';
-      [d, ~]             = vsm_vec2dist(words, vecmat, 5, vec2dist_selection);
+      
+      cfg           = [];
+      cfg.words     = words;
+      cfg.context   = 'moving_window';
+      cfg.order     = 5;
+      cfg.selection = vec2dist_selection;
+      
+      d1       = vsm_vec2dist(cfg, vecmat);
+      
+      cfg.context   = 'sentence';
+      d2      = vsm_vec2dist(cfg, vecmat);
+      
       for jj = 1:numel(words)
-          combineddata(jj).embedding = vecmat(jj,:)';  % pick the vector row for this word, store as column
-          combineddata(jj).semdist   = d(jj);
+          combineddata(jj).embedding = vecmat(jj,:)'; % pick the vector row for this word, store as column
+          combineddata(jj).semdist1  = d1(jj);        % semantic distance based on moving window
+          combineddata(jj).semdist2  = d2(jj);        % semantic distance based on average across sentence
       end
       
       % create language predictor based on language model output
