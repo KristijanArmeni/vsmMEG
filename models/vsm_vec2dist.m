@@ -29,7 +29,6 @@ context    = ft_getopt(cfg, 'context');
 order      = ft_getopt(cfg, 'order');
 selection  = ft_getopt(cfg, 'selection');
 
-dimf = size(vectors, 2); % dimension of feature vectors
 nwrd = size(vectors, 1); % number of words, punctuation
 
 if isempty(selection)
@@ -82,7 +81,7 @@ for k = 1:nwrd
     end
     
     % if possible, determine the context vector
-    context_vector(:) = [];
+    context_vector = [];
     
     if ~isempty(window_idx)
         all_vectors          = vectors(window_idx, :);                % select all vectors in the window
