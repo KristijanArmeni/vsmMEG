@@ -313,7 +313,8 @@ for k = 1:numel(seltrl)
       vec2dist_selection = [combineddata(:).iscontent]';
       
       cfg           = [];
-      cfg.words     = words;
+      cfg.words     = words;                    % cell array of word strings
+      cfg.word_idx  = [combineddata(:).word_]'; % word indices of word positions in a sentence
       cfg.context   = 'moving_window';
       cfg.order     = 5;
       cfg.selection = vec2dist_selection;
