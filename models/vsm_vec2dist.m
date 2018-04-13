@@ -84,11 +84,11 @@ for k = 1:nwrd
     context_vector = [];
     
     if ~isempty(window_idx)
-        all_vectors          = vectors(window_idx, :);                % select all vectors in the window
+        all_vectors          = vectors(window_idx, :);                % select all vectors (rows) in the window
         selected_vectors     = all_vectors(selection(window_idx),:);  % apply subselection (e.g. content words)
         
         if ~isempty(selected_vectors)
-            context_vector       = sum(selected_vectors, 1);          % sum the vectors
+            context_vector   = sum(selected_vectors, 1);          % sum the vectors
         end
     end
     
