@@ -533,7 +533,7 @@ subject.anatomy.headmodel   = [];
 
 megpreproc = fullfile(vsmdir.preproc, [subject.name, '_meg.mat']);
 audpreproc = fullfile(vsmdir.preproc, [subject.name, '_aud.mat']);
-lngpreproc = fullfile(vsmdir.preproc, [subject.name, '_aud.mat']);
+lngpreproc = fullfile(vsmdir.preproc, [subject.name, '_lng.mat']);
 headmodel  = fullfile(vsmdir.anatomy, [subject.name, '_headmodel.mat']);
 leadfield  = fullfile(vsmdir.anatomy, [subject.name, '_leadfield.mat']);
 
