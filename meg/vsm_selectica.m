@@ -1,4 +1,9 @@
 function compsel = vsm_selectica(subject)
+% compsel = vsm_selectica(subject)
+% 
+% INPUT ARGUMENTS
+% subject        = struct or string, struct as given by 'vsm_subjinfo(<subject_string>)'
+% 
 
 if ischar(subject)
     subject       = vsm_subjinfo(subject);
