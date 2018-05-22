@@ -48,7 +48,7 @@ load(subject.anatomy.leadfield); % leadfield variable
 
 %% Parcellate leadfields here
 
-f   = d.atlas{2};
+f   = d.atlas{1}; % 1 == 374 Conte atlas, 2 == Glaser et al (2016, Nat neuro)
 load(f)
 
 %% Compute spatial filters
@@ -68,6 +68,7 @@ cfg.method          = 'lcmv';
 cfg.lcmv.fixedori   = 'yes';
 cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.lambda     = '100%';
+cfg.lcmv.weightnorm = 'unitnoisegain';
 source              = ft_sourceanalysis(cfg, tlck);
 clear headmodel cfg
 
@@ -84,9 +85,11 @@ datatmp.trial  = {cat(2, datatmp.trial{:})};
 datatmp.time   = {(0:(size(datatmp.trial{1},2)-1))./fsample};
 datatmp.dimord = 'chan_time';
 
-selparcidx        = find(~contains(atlas.parcellationlabel, '_???'));
+%selparcidx        = find(~contains(atlas.parcellationlabel, '_???'));
 
-source_parc.label = atlas.parcellationlabel(~contains(atlas.parcellationlabel, '_???'));
+%source_parc.label = atlas.parcellationlabel(~contains(atlas.parcellationlabel, '_???'));
+selparcidx        = unique(atlas.parcellation); % create column of indices 1-num parcels
+source_parc.label = atlas.parcellationlabel; 
 
 source_parc.F     = cell(numel(source_parc.label),1);
 
@@ -99,7 +102,7 @@ for k = 1:numel(source_parc.label)
 
   tmpF      = F(atlas.parcellation==selparcidx(k),:); % select weights for kth parcel
   tmp.trial = {tmpF*datatmp.trial{1}};
-  tmp.label = datatmp.label(1:size(tmpF,1));
+  tmp.label = cellstr(string(1:size(tmpF, 1))');
   tmpcomp   = ft_componentanalysis(cfg, tmp);
 
   source_parc.F{k}     = tmpcomp.unmixing*tmpF;
