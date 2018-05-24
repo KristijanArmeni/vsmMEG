@@ -12,20 +12,20 @@ load(meg)
 load(audio)
 load(featuredata)
 
-do_modelA  = false; % audio envelope
+do_modelA  = true; % audio envelope
 do_modelA1 = false; % semdist alone
 do_modelA2 = false; % perplexity alone
-do_modelB  = false; % word onsets
-do_modelBc = false;
-do_modelC  = false; % semantic distance
-do_modelCc = false;
+do_modelB  = true; % word onsets
+do_modelBc = true;
+do_modelC  = true; % semantic distance
+do_modelCc = true;
 do_modelD  = false; % perplexity
 do_modelDc = false;
 do_modelE  = false; % entropy
 do_modelEc = false;
 do_w2v     = false;  % w2v
 
-do_test    = true;
+do_test    = false;
 testwhat   = 'lambda-training'; % 'lambda', 'delta_pulse';
 
 %% Create Predictor variables
@@ -122,10 +122,10 @@ clear featuredata
 cfg                     = [];
 cfg.channel             = data.label;
 cfg.method              = 'mlrridge';
-cfg.threshold           = [0.001 0];
+cfg.threshold           = [1 0];      % arbitrary
 cfg.reflags             = (-5:74)./100;
 cfg.demeandata          = 'yes';
-cfg.demeanrefdata       = 'no';       % predictors are already demeaned
+cfg.demeanrefdata       = 'no';       % language predictors are already demeaned
 cfg.standardisedata     = 'yes';
 cfg.standardiserefdata  = 'yes';
 cfg.performance         = 'Pearson';
