@@ -2,12 +2,16 @@ function [tlck, stimdata] = vsm_extractwords(subject)
 
 d           = vsm_dir();
 savedir     = d.trf;
+stimdata    = vsm_stimdata(subject);
 
 ft_hastoolbox('cellfunction', 1);
 
-meg         = fullfile(d.preproc, [subject '_lcmv-data.mat']);
-stimdata    = vsm_stimdata(subject);
-load(meg)
+if ischar(subject)
+  meg         = fullfile(d.preproc, [subject '_lcmv-data.mat']);
+  load(meg)
+else
+  data = subject;
+end
 
 % verify the number of trials
 if ~(numel(data.trial)==numel(stimdata))
