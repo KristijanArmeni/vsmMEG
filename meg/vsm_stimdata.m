@@ -24,30 +24,30 @@ for k = 1:numel(audiofile)
 end
 
 % deal with more than one ds-directory per subject
-if iscell(subject.dataset)
-  dataset = cell(0,1);
-  trl     = zeros(0,size(subject.trl{1},2));
-  for k = 1:numel(subject.dataset)
-    trl     = cat(1, trl, subject.trl{k});
-    dataset = cat(1, dataset, repmat(subject.dataset(k), [size(subject.trl{k},1) 1])); 
-    %mixing    = cat(1, mixing,    repmat(subject.eogv.mixing(k), [size(subject.trl{k},1) 1]));
-    %unmixing  = cat(1, unmixing,  repmat(subject.eogv.unmixing(k), [size(subject.trl{k},1) 1]));
-    %badcomps  = cat(1, badcomps,  repmat(subject.eogv.badcomps(k), [size(subject.trl{k},1) 1]));
-    
-  end
-  trl     = trl(seltrl,:);
-  dataset = dataset(seltrl);
-  %mixing  = mixing(seltrl);
-  %unmixing = unmixing(seltrl);
-  %badcomps = badcomps(seltrl);
-else
-  dataset = repmat({subject.dataset}, [numel(seltrl) 1]);
-  trl     = subject.trl(seltrl,:);
-  %mixing    = repmat({subject.eogv.mixing},   [numel(seltrl) 1]);
-  %unmixing  = repmat({subject.eogv.unmixing}, [numel(seltrl) 1]);
-  %badcomps  = repmat({subject.eogv.badcomps}, [numel(seltrl) 1]);
-
-end
+% if iscell(subject.dataset)
+%   dataset = cell(0,1);
+%   trl     = zeros(0,size(subject.trl{1},2));
+%   for k = 1:numel(subject.dataset)
+%     trl     = cat(1, trl, subject.trl{k});
+%     dataset = cat(1, dataset, repmat(subject.dataset(k), [size(subject.trl{k},1) 1])); 
+%     %mixing    = cat(1, mixing,    repmat(subject.eogv.mixing(k), [size(subject.trl{k},1) 1]));
+%     %unmixing  = cat(1, unmixing,  repmat(subject.eogv.unmixing(k), [size(subject.trl{k},1) 1]));
+%     %badcomps  = cat(1, badcomps,  repmat(subject.eogv.badcomps(k), [size(subject.trl{k},1) 1]));
+%     
+%   end
+%   trl     = trl(seltrl,:);
+%   dataset = dataset(seltrl);
+%   %mixing  = mixing(seltrl);
+%   %unmixing = unmixing(seltrl);
+%   %badcomps = badcomps(seltrl);
+% else
+%   dataset = repmat({subject.dataset}, [numel(seltrl) 1]);
+%   trl     = subject.trl(seltrl,:);
+%   %mixing    = repmat({subject.eogv.mixing},   [numel(seltrl) 1]);
+%   %unmixing  = repmat({subject.eogv.unmixing}, [numel(seltrl) 1]);
+%   %badcomps  = repmat({subject.eogv.badcomps}, [numel(seltrl) 1]);
+% 
+% end
 
 %% PREPROCESSING LOOP PER AUDIOFILE
 
