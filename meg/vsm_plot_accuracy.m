@@ -5,12 +5,12 @@ function stat = vsm_plot_accuracy(model1, model2)
 ft_hastoolbox('cellfunction', 1);
 rho = cell(numel(model1.trial), 1);
 
-for k=1:numel(model1.trial)
+for k = 1:numel(model1.weights)
     
     if nargin > 1 
-        rho{k} = model1.weights{k}.pearson - model2.weights{k}.pearson; %  say model based on 'audio_avg only'}
+        rho{k} = model1.weights(k).performance - model2.weights(k).performance; %  say model based on 'audio_avg only'}
     else
-        rho{k} = model1.weights{k}.pearson;
+        rho{k} = model1.weights(k).performance;
     end
     
 end
