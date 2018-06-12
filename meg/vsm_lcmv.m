@@ -70,13 +70,13 @@ cfg.lcmv.keepfilter = 'yes';
 cfg.lcmv.lambda     = '100%';
 cfg.lcmv.weightnorm = 'unitnoisegain';
 source              = ft_sourceanalysis(cfg, tlck);
-clear headmodel cfg
+clear headmodel leadfield cfg
 
 % take the spatial filters
 F                  = zeros(size(source.pos,1),numel(tlck.label)); % num sources by MEG channels matrix
 F(source.inside,:) = cat(1,source.avg.filter{:});
 
-clear source
+clear source tlck
 %% Parcellate the source time courses
 
 % concatenate data across trials
@@ -109,7 +109,7 @@ for k = 1:numel(source_parc.label)
   
 end
 
-clear datatmp tmp tmpcomp F
+clear datatmp tmp tmpcomp F tmpF atlas
 %% Beam the sensor data
 
 data = ft_selectdata(dataorig, 'channel', ft_channelselection('MEG', dataorig.label));
