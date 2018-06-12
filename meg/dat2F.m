@@ -28,17 +28,27 @@ if isempty(B)
     B   = ((design'*design+lambda.*eye(size(design,2)))\design')*dat;
   end
 elseif iscell(B)
+  numfolds = numel(B);
+  Bout     = cell(1, numfolds); % for fold-specific output
+  
   % assume that B is a cell-array containing the indices of the test-folds.
-  for k = 1:numel(B)
-    ix = B{k};
-    iy = setdiff(1:size(alldat,1),ix);
+  for k = 1:numfolds
+    
+    fprintf('Estimating fold %d out of %d ... \n', k, numfolds)
+    
+    ix = B{k};                         % test fold indices
+    iy = setdiff(1:size(alldat,1),ix); % estimation set indices
     
     % demean all regressors, apart from the constant one
-    design(iy,:) = demean(design(iy,:));
+    design(iy,:) = demean(design(iy,:)); %
     design(ix,:) = demean(design(ix,:));
     
-    [~,  ~, ~, ~, ~, ~, Btmp] = dat2F(alldat(iy,:,:), design(iy,:), col0, lambda); 
-    [~, tmpR0, tmpR]          = dat2F(alldat(ix,:,:), design(ix,:), col0, lambda, Btmp); 
+    % 
+    [~, ~, ~, ~, ~, ~, Btmp] = dat2F(alldat(iy,:,:), design(iy,:), col0, lambda); 
+    [~, tmpR0, tmpR]         = dat2F(alldat(ix,:,:), design(ix,:), col0, lambda, Btmp);
+    
+    Bout{k} = Btmp; % save training set betas per fold
+    
     if k==1
       R0 = tmpR0.*numel(ix);
       R  =  tmpR.*numel(ix);
@@ -50,15 +60,15 @@ elseif iscell(B)
     end
   end
   F = (R0-R)./R;
+  B = Bout; clear Bout
   return;
 else
   % use the pre-supplied weights
   B = reshape(permute(B, [1 3 2]), [size(B,1) size(B,2)*size(B,3)]);
 end
 
-R0 = permute(reshape(sum((dat-design(:,col0)*B(col0,:)).^2),[siz(3) siz(2)]),[2 1]);
-R  = permute(reshape(sum((dat-design*B).^2),[siz(3) siz(2)]),[2 1]);
-
+R0 = permute(reshape(sum((dat-design(:,col0)*B(col0,:)).^2,1),[siz(3) siz(2)]),[2 1]);
+R  = permute(reshape(sum((dat-design*B).^2,1),[siz(3) siz(2)]),[2 1]);
 F  = ((R0-R)./(p2-p1))./(R./(n-p2));
 B  = permute(reshape(B,[size(B,1) siz(3) siz(2)]),[1 3 2]);
 
