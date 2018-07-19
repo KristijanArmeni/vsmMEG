@@ -1,4 +1,6 @@
 
+ft_hastoolbox('cellfunction', 1);
+
 %--------------------------------------------------------------------------
 %The following chunk of code does a 'searchlight' based multisetcca, where
 %the searchlight is defined as the 5-component timecourse, describing a
@@ -9,7 +11,7 @@
 %been decided that 'conservative' is most meaningful, because it obeys the
 %approximate timing information of the word onsets across stimulation
 %modalities.
-domscca_searlight = true;
+domscca_searchlight = true;
 if domscca_searchlight
   
   if ~exist('nfold', 'var')
