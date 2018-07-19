@@ -330,27 +330,32 @@ for k = 1:numel(seltrl)
           combineddata(jj).semdist2  = d2(jj);        % semantic distance based on average across sentence
       end
       
+       % create shuffled combineddata and add it to combineddata
+      cfg                = [];
+      cfg.feature        = feature(~ismember(feature, {'embedding', 'duration'})); % don't shift vectors and duration values
+      [combineddata, control_feature] = vsm_shiftdata(cfg, combineddata);
+      
+      feature_sel = [feature control_feature']; % add control feature labels
+      
       % create language predictor based on language model output
-      if iscell(feature)
+      if iscell(feature_sel)
         
-        featuredata = cell(1, numel(feature));
-        for m = 1:numel(feature)
-          featuredata{m} = create_featuredata(combineddata, feature{m}, data, addnoise, word_quantify);
+        featuredata = cell(1, numel(feature_sel));
+        for m = 1:numel(feature_sel)
+          featuredata{m} = create_featuredata(combineddata, feature_sel{m}, data, addnoise, word_quantify);
         end
 
         featuredata = ft_appenddata([], featuredata{:});
 
       else
-
         % single feature
-        featuredata = create_featuredata(combineddata, feature, data, addnoise, word_quantify);
-
+        featuredata = create_featuredata(combineddata, feature_sel, data, addnoise, word_quantify);
       end
       
   end
   % add to structs for outputting
   if dofeature
-    tmpfeature{k}  = featuredata;
+    tmpfeature{k}   = featuredata;
   end
   tmpdata{k}  = data;
   tmpaudio{k} = audio;
@@ -457,7 +462,7 @@ function [featuredata] = create_featuredata(combineddata, feature, data, addnois
 config.feature = feature;
 config.fsample = data.fsample;
 config.select  = select;
-config.shape   = 'stick';
+config.shape   = 'box';
 
 [time, featurevector] = get_time_series(config, combineddata);
 
@@ -522,6 +527,39 @@ num_samples   = size(featurevector, 2);
 
     end
 
+end
+
+function [combineddata_shift, newfeature] = vsm_shiftdata(cfg, combineddata)
+    
+    combineddata_shift = combineddata; % create output variable
+    
+    if ~iscell(cfg.feature)
+        error('cfg.fields must be a cell array\n')
+    else
+        
+        % feature loop
+        newfeature = cell(numel(cfg.feature), 1);
+        for ii = 1:numel(cfg.feature)
+            
+            selfeature = cfg.feature{ii};                % choose feature
+            values     = [combineddata(:).(selfeature)]; % create vector of feature values
+            
+            % do a circular shift of values
+            halfs          = ceil(size(values, 2)/2);    % determine the size of the circular shift
+            values_shifted = circshift(values, halfs);   % do the shift
+            
+            % update strings of new features
+            newfeature{ii} = [selfeature '_c'];
+            
+            % assign the shifted values to the new structure
+            for l = 1:size(values, 2)          
+                combineddata_shift(l).(newfeature{ii}) = values_shifted(:,l); % grab the whole vector or scalar
+            end
+            
+        end
+        
+    end
+    
 end
 
 end
