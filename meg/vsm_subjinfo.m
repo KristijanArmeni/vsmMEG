@@ -23,9 +23,9 @@ subject.montage.labelorg = {'EEG057';'EEG058';'EEG059'};
 subject.montage.labelnew = {'EOGh';  'EOGv';  'ECG'};
 subject.montage.tra      = eye(3);
 
-subject_rawdir   = fullfile('/project/3011044.02/raw/', subjectdir);
+subject_rawdir   = fullfile('/project/3011085.04/data/raw/', subjectdir);
 subject.mridir    = '/project/3011044.02/data/mri';
-subject.audiodir  = '/project/3011044.02/lab/pilot/stim/audio';
+subject.audiodir  = vsmdir.audio;
 
 % check for meg sessions subfolders in the /project/3011044.02/raw/sub-XXX
 meg_sessions = dir(fullfile(subject_rawdir, 'ses-meg*'));
