@@ -8,7 +8,7 @@ function [subject] = vsm_subjinfo(name)
 
 if iscell(name)
   for k = 1:numel(name)
-    subject(k,1) = vsm_subjinfo(name{k});
+    subject(k,1) = removefields(vsm_subjinfo(name{k}),{'cac'}); % some subjects don't have this
   end
   return;
 end
@@ -495,7 +495,7 @@ else
 end
 
 % Do component analysis per story
-subject.ica.comp    = vsm_fastica(subject);
+%subject.ica.comp    = vsm_fastica(subject);
 
 % Load selected components
 compsel = fullfile(vsmdir.preproc, [subject.name '_compsel.mat']);
