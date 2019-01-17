@@ -46,10 +46,16 @@ end
 load(subject.anatomy.headmodel); % headmodel variable
 load(subject.anatomy.leadfield); % leadfield variable
 
+%% JM added the next few lines, to avoid recomputing the leadfields
+if isfield(leadfield, 'labelorg')
+  leadfield.label = leadfield.labelorg;
+end
+  
 %% Parcellate leadfields here
 
 f   = d.atlas{1}; % 1 == 374 Conte atlas, 2 == Glaser et al (2016, Nat neuro)
 load(f)
+
 
 %% Compute spatial filters
 
@@ -63,7 +69,6 @@ tlck.cov            = real(tlck.cov);
 cfg                 = [];
 cfg.headmodel       = headmodel;
 cfg.grid            = leadfield;
-cfg.grid.label      = tlck.label;
 cfg.method          = 'lcmv';
 cfg.lcmv.fixedori   = 'yes';
 cfg.lcmv.keepfilter = 'yes';
@@ -112,7 +117,9 @@ end
 clear datatmp tmp tmpcomp F tmpF atlas
 %% Beam the sensor data
 
-data = ft_selectdata(dataorig, 'channel', ft_channelselection('MEG', dataorig.label));
+cfg = [];
+cfg.channel = ft_channelselection('MEG',dataorig.label);
+data = ft_selectdata(cfg, data);
 
 % create now a 'spatial filter' that concatenates the first components for
 % each of the parcels 

@@ -1,6 +1,19 @@
 
 ft_hastoolbox('cellfunction', 1);
 
+
+% subj = {'s02','s03','s04','s07','s08','s10',...
+%         's11','s12','s13','s14','s15','s16',...
+%         's17','s18','s19','s20','s21','s22',...
+%         's23','s24','s25','s26','s27','s28'};
+subj = {'s02','s03','s04','s07',...
+        's11','s12','s13','s14','s15','s16',...
+        's17','s18','s19','s20','s21','s22',...
+        's23','s24','s25','s26','s27','s28'};
+
+subj = vsm_subjinfo(subj);
+
+      
 %--------------------------------------------------------------------------
 %The following chunk of code does a 'searchlight' based multisetcca, where
 %the searchlight is defined as the 5-component timecourse, describing a
@@ -40,24 +53,36 @@ if domscca_searchlight
   subjectdata = cell(1,numel(subj));
   for k = 1:numel(subj)
     load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_meg',subj(k).name)));
+    load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_aud',subj(k).name)));
+    load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_lng-box',  subj(k).name)));
     load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_lcmv-filt',subj(k).name)));
     
     source_parc.filterlabel = data.label; % for checking channel order, assumes same order in the filters
     
-    subjectdata{1,k} = mous_multisetcca_sensor2parcel(data, source_parc, parcel_indx);
+    subjectdata{1,k} = vsm_multisetcca_sensor2parcel(data, source_parc, parcel_indx);
+    
+    cfg = [];
+    cfg.channel = 'audio_avg';
+    audio = ft_selectdata(cfg, audio);
+    
+    cfg.channel = {'entropy';'entropy_c';'perplexity';'perplexity_c'};
+    featuredata = ft_selectdata(cfg, featuredata);
+    
+    subjectdata{1,k} = ft_appenddata([], subjectdata{1,k}, audio, featuredata);
+    subjectdata{1,k}.fsample = audio.fsample;
   end
     
   for k = 1:numel(subjectdata)
     % align the order of the trials
-    [srt,ix] = sort(subjectdata{k}.trialinfo);
+    [srt,ix] = sort(subj(k).audiofile);
     subjectdata{k}.time  = subjectdata{k}.time(ix);
     subjectdata{k}.trial = subjectdata{k}.trial(ix);
     subjectdata{k}.trialinfo = subjectdata{k}.trialinfo(ix,:);
     subjectdata{k}.audiofile = subj(k).audiofile(ix);
     if k==1
-      T = subjectdata{k}.trialinfo;
+      T = subjectdata{k}.audiofile;
     else
-      T = intersect(T, subjectdata{k}.trialinfo);
+      T = intersect(T, subjectdata{k}.audiofile);
     end
     
     % check the sampling of the time axis, and add the extremes to the
@@ -71,7 +96,7 @@ if domscca_searchlight
   for k = 1:numel(subjectdata)
     % only use the trials that are common across all subjects
     cfg = [];
-    cfg.trials = find(ismember(subjectdata{k}.trialinfo, T));
+    cfg.trials = find(ismember(subjectdata{k}.audiofile, T));
     audiofile  = subjectdata{k}.audiofile;
     subjectdata{k} = ft_selectdata(cfg, subjectdata{k});
     subjectdata{k}.audiofile = audiofile(cfg.trials);
@@ -101,73 +126,94 @@ if domscca_searchlight
   end
       
   for k = 1:numel(subjectdata)
+    cfg = [];
+    cfg.channel = {'audio_avg';'entropy';'entropy_c';'perplexity';'perplexity_c'};
+    audiodata{1,k} = ft_selectdata(cfg, subjectdata{1,k});
+    audiodata{1,k} = removefields(audiodata{1,k}, 'audiofile');
+    audiodata{1,k}.time = audiodata{1}.time;
+    
     audiofile = subjectdata{k}.audiofile;
     cfg = [];
     cfg.method = 'acrosschannel';
+    cfg.channel = subjectdata{k}.label(1:5);
     subjectdata{k} = ft_channelnormalise(cfg, subjectdata{1,k});
     subjectdata{k}.audiofile = audiofile;
   end
   
   rng('default'); % reset the number generator, in order to be able to compare across parcels
-  tmpdata              = mous_multisetcca_groupdata2singlestruct(subjectdata, {subj.name});
-  [W, A, rho, C, comp] = mous_multisetcca(tmpdata, [], 1, [],false);
-  [comp, rho]          = mous_multisetcca_postprocess(comp, rho, source_parc.label{parcel_indx});
+  tmpdata              = vsm_multisetcca_groupdata2singlestruct(subjectdata, {subj.name});
+  [W, A, rho, C, comp] = vsm_multisetcca(tmpdata, {1 2 3 4 5}, 1, .1,false);
+  [comp, rho]          = vsm_multisetcca_postprocess(comp, rho, source_parc.label{parcel_indx});
   comp.audiofile       = subjectdata{1}.audiofile;
   [tlck, stimdata]     = vsm_extractwords(comp);
+  
+  % now also extract the the 'tlck' for tmpdata (first component only)
+  tmpcfg = [];
+  tmpcfg.channel = tmpdata.label(1:5:end); % hard coded
+  tmpdata_tmp    = ft_selectdata(tmpcfg, tmpdata);  
+  [tlck_pca]     = vsm_extractwords(tmpdata_tmp);
+  
+  cfg = [];
+  cfg.appenddim = 'rpt';
+  cfg.parameter = 'trial';
+  tlck     = ft_appendtimelock(cfg, tlck{:});
+  tlck_pca = ft_appendtimelock(cfg, tlck_pca{:});
+  
+  trc            = vsm_multisetcca_trc(tlck);
+  trc_pca        = vsm_multisetcca_trc(tlck_pca);
+  
+  tlck = ft_struct2single(tlck);
+  tlck_pca = ft_struct2single(tlck_pca);
+  
+  for k = 1:numel(audiodata)
+    for  m = 1:numel(audiodata{k}.label)
+      audiodata{k}.label{m} = sprintf('%s%02d',audiodata{k}.label{m},k);
+    end
+    audiodata{k}.time     = audiodata{1}.time;
+  end
+  audiodata = ft_appenddata([], audiodata{:});
+  
+  
+  for k = 1:numel(audiodata.trial)
+    for i = 1:m
+      audiodata.trial{k}(i,:) = nanmean(audiodata.trial{k}(i:m:end,:));
+    end
+    audiodata.trial{k} = audiodata.trial{k}(1:m,:);
+  end
+  audiodata.label = audiodata.label(1:m);
+  audiodata.label = strrep(audiodata.label,'01','');
+  audiodata.cfg   = rmfield(audiodata.cfg, 'previous');
+  
+  %cfg = [];
+  %cfg.avgoverchan = 'yes';
+  %cfg.nanmean = 'yes';
+  %audiodata = ft_selectdata(cfg, audiodata);
+  
+  cfg = [];
+  cfg.method     = 'mlrridge';
+  cfg.threshold  = [0.5 0];
+  cfg.reflags    = (-5:74)./100;
+  cfg.refchannel = audiodata.label([1 2]);
+  cfg.demeandata = 'yes';
+  cfg.demeanrefdata = 'yes';
+  cfg.standardisedata = 'yes';
+  cfg.standardiserefdata = 'yes';
+  cfg.performance = 'r-squared';
+  cfg.output      = 'model';
+  cfg.testtrials  = mat2cell(1:numel(comp.trial),1,ones(1,numel(comp.trial)));
+  trf     = ft_denoise_tsr(cfg, removefields(comp,        {'audiofile' 'trialinfo'}), removefields(audiodata,'audiofile'));
+  trf_pca = ft_denoise_tsr(cfg, removefields(tmpdata_tmp, {'audiofile' 'trialinfo'}), removefields(audiodata,'audiofile'));
+  
+  trf     = removefields(ft_struct2single(trf), {'time' 'trial'});
+  trf_pca = removefields(ft_struct2single(trf_pca), {'time' 'trial'});
+  
+  save(sprintf('/project/3011044.02/dump/mscca_parcel%03d',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca');
+  
+  
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%
   %-------TOBEDONE----------
   switch shuftype
-    case 'lenient'
-      % lenient shuffling, that maintins the timing within sensory
-      % modality, but does not obey individual word onsets across
-      % modalities
-      
-      selaudio = find(strncmp(subj, 'sub-2', 5));
-      selvis   = find(strncmp(subj, 'sub-1', 5));
-      for m = nrand(:)'
-        [groupdatashuf, allshufvec] = mous_multisetcca_shuffle(groupdata, {selvis(:)' selaudio(:)'}); % shuffle before folding
-        stimdata                    = mous_multisetcca_shufflestimdata(groupdata{1}, allshufvec([selvis(1) selaudio(1)],:));
-        T = stimdata{1}.trialinfo;
-        cfg = [];
-        cfg.operation = 'add';
-        cfg.parameter = 'trial';
-        stimdata = ft_math(cfg, stimdata{:});
-        stimdata.trialinfo = T;
-        
-        % perform the cca
-        [Wshuf, Ashuf, rhoshuf, ~, compshuf] = mous_multisetcca(groupdatashuf, nfold, 4, [], false);
-        [compshuf, rhoshuf] = mous_multisetcca_postprocess(compshuf, rhoshuf, source_parc.label{parcel_indx});
-        
-        % reorder the stimonset data
-        reorder = zeros(numel(stimdata.trial),1);
-        for k = 1:numel(reorder)
-          reorder(k) = find(stimdata.trialinfo(:,end)==compshuf.trialinfo(k));
-        end
-        stimdata.trialinfo = stimdata.trialinfo(reorder,:);
-        stimdata.time      = stimdata.time(reorder);
-        stimdata.trial     = stimdata.trial(reorder);
-        for k = 1:numel(stimdata.trial)
-          stimdata.trial{k}(~isfinite(stimdata.trial{k})) = 0;
-        end
-        % compute coherence etc
-        [cohshufstim(m), cohshuf(m)] = mous_multisetcca_coh(compshuf,stimdata);
-        Rshuf(:,:,:,m)              = single(rhoshuf);
-      end
-      Cshuf = single(cat(4,cohshuf.cohspctrm));
-      Cshuf = Cshuf(:,:,1:41,:);
-      Cshufstim = single(cat(3,cohshufstim.cohspctrm));
-      Cshufstim = Cshufstim(:,1:41,:);
-      foi   = cohshuf(1).freq(1:41);
-      savedir = '/project/3011020.09/jansch/mscca_group';
-      filename = fullfile(savedir, sprintf('mscca_sce%d_parcel%03dshuf',scenario,parcel_indx));
-      if exist([filename,'.mat'], 'file')
-        tmp = load(filename);
-        Cshuf = cat(4,tmp.Cshuf,Cshuf);
-        Rshuf = cat(4,tmp.Rshuf,Rshuf);
-        Cshufstim = cat(3,tmp.Cshufstim,Cshufstim);
-      end
-      save(filename,'Rshuf','Cshuf', 'foi', 'Cshufstim');
     
     case 'conservative'
       % unfold the audio data to maintain word onsets across modalities,
