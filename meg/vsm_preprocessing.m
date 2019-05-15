@@ -498,7 +498,9 @@ num_samples   = size(featurevector, 2);
         featuredata.trial{numel(data.trial)}(feature_dim,:) = 0; % create the trial array of correct dimensions
 
     else    
-        featuredata          = ft_selectdata(data, 'channel', data.label(1)); % ensure that it only has 1 channel
+        cfgtmp               = [];            % ensure that it only has 1 channel
+        cfgtmp.channel       = data.label(1);
+        featuredata          = ft_selectdata(cfgtmp, data);
         featuredata.label{1} = feature;
     end
 
