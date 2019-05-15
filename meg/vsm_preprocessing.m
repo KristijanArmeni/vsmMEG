@@ -111,9 +111,9 @@ end
 
 %% PREPROCESSING LOOP PER AUDIOFILE
 
-audiodir                    = '/project/3011044.02/lab/pilot/stim/audio';
-subtlex_table_filename      = '/project/3011044.02/raw/stimuli/worddata_subtlex.mat';
-subtlex_firstrow_filename   = '/project/3011044.02/raw/stimuli/worddata_subtlex_firstrow.mat';
+audiodir                    = '/project/3011085.04/data/stim/audio';
+subtlex_table_filename      = '/project/3011085.04/data/stim/txt/worddata_subtlex.mat';
+subtlex_firstrow_filename   = '/project/3011085.04/data/stim/txt/worddata_subtlex_firstrow.mat';
 subtlex_data     = [];          % declare the variables, it throws a dynamic assignment error otherwise
 subtlex_firstrow = [];
 

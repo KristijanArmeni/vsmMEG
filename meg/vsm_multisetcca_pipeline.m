@@ -52,10 +52,10 @@ if domscca_searchlight
   % representation, but that is for memory reasons
   subjectdata = cell(1,numel(subj));
   for k = 1:numel(subj)
-    load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_meg',subj(k).name)));
-    load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_aud',subj(k).name)));
-    load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_lng-box',  subj(k).name)));
-    load(fullfile('/project/3011044.02/vsm/data/preproc',sprintf('%s_lcmv-filt',subj(k).name)));
+    load(fullfile('/project/3011085.04/data/derived',sprintf('%s_meg',subj(k).name)));
+    load(fullfile('/project/3011085.04/data/derived',sprintf('%s_aud',subj(k).name)));
+    load(fullfile('/project/3011085.04/data/derived',sprintf('%s_lng-box',  subj(k).name)));
+    load(fullfile('/project/3011085.04/data/derived',sprintf('%s_lcmv-filt',subj(k).name)));
     
     source_parc.filterlabel = data.label; % for checking channel order, assumes same order in the filters
     
@@ -70,6 +70,7 @@ if domscca_searchlight
     
     subjectdata{1,k} = ft_appenddata([], subjectdata{1,k}, audio, featuredata);
     subjectdata{1,k}.fsample = audio.fsample;
+    
   end
     
   for k = 1:numel(subjectdata)
@@ -134,22 +135,42 @@ if domscca_searchlight
     
     audiofile = subjectdata{k}.audiofile;
     cfg = [];
-    cfg.method = 'acrosschannel';
     cfg.channel = subjectdata{k}.label(1:5);
+    subjectdata{k} = ft_selectdata(cfg, subjectdata{1,k});
+    
+    cfg = [];
+    cfg.method = 'acrosschannel';
     subjectdata{k} = ft_channelnormalise(cfg, subjectdata{1,k});
     subjectdata{k}.audiofile = audiofile;
   end
   
+  for k = 1:numel(subjectdata)
+    % do the time shifting trick for the hyperalignment
+    lags = -6:6;
+    subjectdata{k}.trial = cellshift(subjectdata{k}.trial, lags, 2, [], 'overlap');
+    subjectdata{k}.time  = cellshift(subjectdata{k}.time, 0, 2, [abs(min(lags)) abs(max(lags))], 'overlap');
+    subjectdata{k}.label = repmat(subjectdata{k}.label(1:5),numel(lags),1);
+    
+    for kk = 1:numel(subjectdata{k}.label)/5
+      subjectdata{k}.label{(kk-1)*5+1} = sprintf('%s_shift%03d',subjectdata{k}.label{(kk-1)*5+1}, kk);
+      subjectdata{k}.label{(kk-1)*5+2} = sprintf('%s_shift%03d',subjectdata{k}.label{(kk-1)*5+2}, kk);
+      subjectdata{k}.label{(kk-1)*5+3} = sprintf('%s_shift%03d',subjectdata{k}.label{(kk-1)*5+3}, kk);
+      subjectdata{k}.label{(kk-1)*5+4} = sprintf('%s_shift%03d',subjectdata{k}.label{(kk-1)*5+4}, kk);
+      subjectdata{k}.label{(kk-1)*5+5} = sprintf('%s_shift%03d',subjectdata{k}.label{(kk-1)*5+5}, kk);
+    end
+  end
+  
   rng('default'); % reset the number generator, in order to be able to compare across parcels
   tmpdata              = vsm_multisetcca_groupdata2singlestruct(subjectdata, {subj.name});
-  [W, A, rho, C, comp] = vsm_multisetcca(tmpdata, {1 2 3 4 5}, 1, .1,false);
+  tmpdata.cfg          = rmfield(tmpdata.cfg, 'previous'); % this removes a rather big cfg that accumulates across folds
+  [W, A, rho, C, comp] = vsm_multisetcca(tmpdata, {1 2 3 4 5}, 1, 5,false);
   [comp, rho]          = vsm_multisetcca_postprocess(comp, rho, source_parc.label{parcel_indx});
   comp.audiofile       = subjectdata{1}.audiofile;
   [tlck, stimdata]     = vsm_extractwords(comp);
   
   % now also extract the the 'tlck' for tmpdata (first component only)
   tmpcfg = [];
-  tmpcfg.channel = tmpdata.label(1:5:end); % hard coded
+  tmpcfg.channel = tmpdata.label(31:65:end); % hard coded
   tmpdata_tmp    = ft_selectdata(tmpcfg, tmpdata);  
   [tlck_pca]     = vsm_extractwords(tmpdata_tmp);
   
@@ -184,6 +205,23 @@ if domscca_searchlight
   audiodata.label = strrep(audiodata.label,'01','');
   audiodata.cfg   = rmfield(audiodata.cfg, 'previous');
   
+  % now we need to match the comp's time with that of the independent
+  % variables
+  for k = 1:numel(audiodata.time)
+    audiodata.time{k} = audiodata.time{k}(7:end-6); % the numbers here should match the lags
+    audiodata.trial{k} = audiodata.trial{k}(:,7:end-6); % the numbers here should match the lags
+  
+  end
+  
+  audiodata.audiofile = audiofile;
+  audiodata.fsample   = comp.fsample;
+  [tlck_audio]     = vsm_extractwords(audiodata);
+  cfg = [];
+  cfg.appenddim = 'rpt';
+  cfg.parameter = 'trial';
+  tlck_audio    = ft_appendtimelock(cfg, tlck_audio{:});
+  audiodata = rmfield(audiodata, 'audiofile');
+  
   %cfg = [];
   %cfg.avgoverchan = 'yes';
   %cfg.nanmean = 'yes';
@@ -191,7 +229,7 @@ if domscca_searchlight
   
   cfg = [];
   cfg.method     = 'mlrridge';
-  cfg.threshold  = [0.5 0];
+  cfg.threshold  = [2 0];
   cfg.reflags    = (-5:74)./100;
   cfg.refchannel = audiodata.label([1 2]);
   cfg.demeandata = 'yes';
@@ -204,10 +242,10 @@ if domscca_searchlight
   trf     = ft_denoise_tsr(cfg, removefields(comp,        {'audiofile' 'trialinfo'}), removefields(audiodata,'audiofile'));
   trf_pca = ft_denoise_tsr(cfg, removefields(tmpdata_tmp, {'audiofile' 'trialinfo'}), removefields(audiodata,'audiofile'));
   
-  trf     = removefields(ft_struct2single(trf), {'time' 'trial'});
+  trf     = removefields(ft_struct2single(trf),     {'time' 'trial'});
   trf_pca = removefields(ft_struct2single(trf_pca), {'time' 'trial'});
   
-  save(sprintf('/project/3011044.02/dump/mscca_parcel%03d',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca');
+  save(sprintf('/project/3011085.04/data/derived/mscca/mscca_parcel%03d',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca', 'comp');
   
   
   

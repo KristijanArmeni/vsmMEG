@@ -119,7 +119,7 @@ clear datatmp tmp tmpcomp F tmpF atlas
 
 cfg = [];
 cfg.channel = ft_channelselection('MEG',dataorig.label);
-data = ft_selectdata(cfg, data);
+data = ft_selectdata(cfg, dataorig);
 
 % create now a 'spatial filter' that concatenates the first components for
 % each of the parcels 
