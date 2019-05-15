@@ -505,6 +505,13 @@ if exist(compsel, 'file')
 else
     subject.ica.compsel = [];
 end
+compsel = fullfile(vsmdir.preproc, [subject.name '_comp.mat']);
+if exist(compsel, 'file')
+    load(compsel);
+    subject.ica.comp = comp;
+else
+    subject.ica.comp = [];
+end
 
 % estimate the delay between the audio signal in the data, and the wav-file
 delay         = streams_audiodelay(subject);
