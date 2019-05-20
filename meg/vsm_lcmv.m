@@ -68,7 +68,7 @@ tlck.cov            = real(tlck.cov);
 
 cfg                 = [];
 cfg.headmodel       = headmodel;
-cfg.grid            = leadfield;
+cfg.sourcemodel     = leadfield;
 cfg.method          = 'lcmv';
 cfg.lcmv.fixedori   = 'yes';
 cfg.lcmv.keepfilter = 'yes';

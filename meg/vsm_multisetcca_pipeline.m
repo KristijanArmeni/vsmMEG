@@ -2,17 +2,14 @@
 ft_hastoolbox('cellfunction', 1);
 
 
-% subj = {'s02','s03','s04','s07','s08','s10',...
-%         's11','s12','s13','s14','s15','s16',...
-%         's17','s18','s19','s20','s21','s22',...
-%         's23','s24','s25','s26','s27','s28'};
 subj = {'s02','s03','s04','s07',...
         's11','s12','s13','s14','s15','s16',...
         's17','s18','s19','s20','s21','s22',...
         's23','s24','s25','s26','s27','s28'};
 
-subj = vsm_subjinfo(subj);
 
+subj = vsm_subjinfo(subj);
+subj = rmfield(subj,'ica'); % save memory
       
 %--------------------------------------------------------------------------
 %The following chunk of code does a 'searchlight' based multisetcca, where
@@ -24,6 +21,8 @@ subj = vsm_subjinfo(subj);
 %been decided that 'conservative' is most meaningful, because it obeys the
 %approximate timing information of the word onsets across stimulation
 %modalities.
+
+tic;
 domscca_searchlight = true;
 if domscca_searchlight
   
@@ -230,8 +229,8 @@ if domscca_searchlight
   cfg = [];
   cfg.method     = 'mlrridge';
   cfg.threshold  = [2 0];
-  cfg.reflags    = (-5:74)./100;
-  cfg.refchannel = audiodata.label([1 2]);
+  cfg.reflags    = (-0:74)./100;
+  cfg.refchannel = audiodata.label([1 3]);
   cfg.demeandata = 'yes';
   cfg.demeanrefdata = 'yes';
   cfg.standardisedata = 'yes';
@@ -245,8 +244,9 @@ if domscca_searchlight
   trf     = removefields(ft_struct2single(trf),     {'time' 'trial'});
   trf_pca = removefields(ft_struct2single(trf_pca), {'time' 'trial'});
   
-  save(sprintf('/project/3011085.04/data/derived/mscca/mscca_parcel%03d',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca', 'comp');
-  
+  %save(sprintf('/project/3011085.04/data/derived/mscca/mscca_parcel%03d',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca', 'comp');
+  save(sprintf('/project/3011085.04/data/derived/mscca/mscca_parcel%03d_perpl',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca', 'comp');
+ 
   
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -324,4 +324,4 @@ if domscca_searchlight
   end
 end
 %--------------------------------------------------------------------------
-
+toc;
