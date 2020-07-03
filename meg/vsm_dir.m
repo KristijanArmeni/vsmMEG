@@ -15,7 +15,7 @@ dirs.data       = fullfile(dirs.home, 'data');
 dirs.raw        = fullfile(dirs.data, 'raw');
 dirs.meg        = fullfile(dirs.data, 'derived');
 dirs.preproc    = dirs.meg;
-dirs.audio      = fullfile(dirs.streams, 'preproc', 'audio');
+dirs.audio      = fullfile(dirs.data, 'stim', 'audio');
 dirs.result     = fullfile(dirs.home, 'results');
 dirs.anatomy    = fullfile(dirs.streams, 'preproc', 'anatomy');
 
