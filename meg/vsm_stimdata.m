@@ -51,9 +51,9 @@ end
 
 %% PREPROCESSING LOOP PER AUDIOFILE
 
-audiodir                    = '/project/3011044.02/lab/pilot/stim/audio';
-subtlex_table_filename      = '/project/3011044.02/raw/stimuli/worddata_subtlex.mat';
-subtlex_firstrow_filename   = '/project/3011044.02/raw/stimuli/worddata_subtlex_firstrow.mat';
+audiodir                    = '/project/3011085.04/data/stim/audio';
+subtlex_table_filename      = '/project/3011085.04/data/raw/stimuli/worddata_subtlex.mat';
+subtlex_firstrow_filename   = '/project/3011085.04/data/raw/stimuli/worddata_subtlex_firstrow.mat';
 subtlex_data     = [];          % declare the variables, it throws a dynamic assignment error otherwise
 subtlex_firstrow = [];
 
@@ -92,7 +92,7 @@ for k = 1:numel(seltrl)
   combineddata = add_subtlex(combineddata, subtlex_data,  subtlex_firstrow);
   
   % create semantic distance field in combineddata
-  vector_file        = fullfile('/project/3011044.02/preproc/stimuli/vectors', [f '.txt']);
+  vector_file        = fullfile('/project/3011085.04/data/stim/txt/vectors', [f '.txt']);
   [vecmat, words]    = vsm_readvectors(vector_file);
   
   vec2dist_selection = [combineddata(:).iscontent]';
