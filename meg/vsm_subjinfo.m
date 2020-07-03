@@ -474,44 +474,44 @@ if str2double(name(2:end)) >= 11
   subject.audiofile(:, end) = subject.audiofile(subject.trl(:, end)./10); % create one-valued ints
 end    
     
-% get squid artifacts
-cfg = streams_artifact_squidjumps(subject);
-if ~iscell(cfg)
-  subject.artfctdef.squidjumps = cfg.artfctdef.zvalue;
-else
-  for k = 1:numel(cfg)
-    subject.artfctdef.squidjumps{k} = cfg{k}.artfctdef.zvalue;
-  end
-end
-  
-% get muscle artifacts
-cfg = streams_artifact_muscle(subject);
-if ~iscell(cfg)
-  subject.artfctdef.muscle = cfg.artfctdef.zvalue;
-else
-  for k = 1:numel(cfg)
-    subject.artfctdef.muscle{k} = cfg{k}.artfctdef.zvalue;
-  end
-end
-
-% Do component analysis per story
-%subject.ica.comp    = vsm_fastica(subject);
-
-% Load selected components
-compsel = fullfile(vsmdir.preproc, [subject.name '_compsel.mat']);
-if exist(compsel, 'file')
-    load(compsel);
-    subject.ica.compsel = compsel;
-else
-    subject.ica.compsel = [];
-end
-compsel = fullfile(vsmdir.preproc, [subject.name '_comp.mat']);
-if exist(compsel, 'file')
-    load(compsel);
-    subject.ica.comp = comp;
-else
-    subject.ica.comp = [];
-end
+% % get squid artifacts
+% cfg = streams_artifact_squidjumps(subject);
+% if ~iscell(cfg)
+%   subject.artfctdef.squidjumps = cfg.artfctdef.zvalue;
+% else
+%   for k = 1:numel(cfg)
+%     subject.artfctdef.squidjumps{k} = cfg{k}.artfctdef.zvalue;
+%   end
+% end
+%   
+% % get muscle artifacts
+% cfg = streams_artifact_muscle(subject);
+% if ~iscell(cfg)
+%   subject.artfctdef.muscle = cfg.artfctdef.zvalue;
+% else
+%   for k = 1:numel(cfg)
+%     subject.artfctdef.muscle{k} = cfg{k}.artfctdef.zvalue;
+%   end
+% end
+% 
+% % Do component analysis per story
+% %subject.ica.comp    = vsm_fastica(subject);
+% 
+% % Load selected components
+% compsel = fullfile(vsmdir.preproc, [subject.name '_compsel.mat']);
+% if exist(compsel, 'file')
+%     load(compsel);
+%     subject.ica.compsel = compsel;
+% else
+%     subject.ica.compsel = [];
+% end
+% compsel = fullfile(vsmdir.preproc, [subject.name '_comp.mat']);
+% if exist(compsel, 'file')
+%     load(compsel);
+%     subject.ica.comp = comp;
+% else
+%     subject.ica.comp = [];
+% end
 
 % estimate the delay between the audio signal in the data, and the wav-file
 delay         = streams_audiodelay(subject);
