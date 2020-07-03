@@ -9,7 +9,7 @@ subj = {'s02','s03','s04','s07',...
 
 
 subj = vsm_subjinfo(subj);
-subj = rmfield(subj,'ica'); % save memory
+subj = removefields(subj,'ica'); % save memory
       
 %--------------------------------------------------------------------------
 %The following chunk of code does a 'searchlight' based multisetcca, where
@@ -64,7 +64,7 @@ if domscca_searchlight
     cfg.channel = 'audio_avg';
     audio = ft_selectdata(cfg, audio);
     
-    cfg.channel = {'entropy';'entropy_c';'perplexity';'perplexity_c'};
+    cfg.channel = {'entropy';'entropy_c';'perplexity';'perplexity_c';'log10wf';'log10wf_c'};
     featuredata = ft_selectdata(cfg, featuredata);
     
     subjectdata{1,k} = ft_appenddata([], subjectdata{1,k}, audio, featuredata);
@@ -127,7 +127,7 @@ if domscca_searchlight
       
   for k = 1:numel(subjectdata)
     cfg = [];
-    cfg.channel = {'audio_avg';'entropy';'entropy_c';'perplexity';'perplexity_c'};
+    cfg.channel = {'audio_avg';'entropy';'perplexity';'log10wf'};
     audiodata{1,k} = ft_selectdata(cfg, subjectdata{1,k});
     audiodata{1,k} = removefields(audiodata{1,k}, 'audiofile');
     audiodata{1,k}.time = audiodata{1}.time;
@@ -162,7 +162,9 @@ if domscca_searchlight
   rng('default'); % reset the number generator, in order to be able to compare across parcels
   tmpdata              = vsm_multisetcca_groupdata2singlestruct(subjectdata, {subj.name});
   tmpdata.cfg          = rmfield(tmpdata.cfg, 'previous'); % this removes a rather big cfg that accumulates across folds
-  [W, A, rho, C, comp] = vsm_multisetcca(tmpdata, {1 2 3 4 5}, 1, 5,false);
+  
+  lambda = 5;
+  [W, A, rho, C, comp] = vsm_multisetcca(tmpdata, {1 2 3 4 5}, 1, lambda,false);
   [comp, rho]          = vsm_multisetcca_postprocess(comp, rho, source_parc.label{parcel_indx});
   comp.audiofile       = subjectdata{1}.audiofile;
   [tlck, stimdata]     = vsm_extractwords(comp);
@@ -228,9 +230,9 @@ if domscca_searchlight
   
   cfg = [];
   cfg.method     = 'mlrridge';
-  cfg.threshold  = [2 0];
-  cfg.reflags    = (-0:74)./100;
-  cfg.refchannel = audiodata.label([1 3]);
+  cfg.threshold  = [10 0];
+  cfg.reflags    = (-5:59)./100;
+  cfg.refchannel = audiodata.label([1]);% 3]);
   cfg.demeandata = 'yes';
   cfg.demeanrefdata = 'yes';
   cfg.standardisedata = 'yes';
@@ -245,83 +247,8 @@ if domscca_searchlight
   trf_pca = removefields(ft_struct2single(trf_pca), {'time' 'trial'});
   
   %save(sprintf('/project/3011085.04/data/derived/mscca/mscca_parcel%03d',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca', 'comp');
-  save(sprintf('/project/3011085.04/data/derived/mscca/mscca_parcel%03d_perpl',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca', 'comp');
- 
-  
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%
-  %-------TOBEDONE----------
-  switch shuftype
-    
-    case 'conservative'
-      % unfold the audio data to maintain word onsets across modalities,
-      % but after swapping sentences
-            
-      selaudio = find(strncmp(subj, 'sub-2', 5));
-      selvis   = find(strncmp(subj, 'sub-1', 5));
-      groupdatashuf = groupdata;
-      
-      cnt = 0;
-      Cshufstim = zeros(81,2,numel(nrand));
-      Cshuf     = zeros(81,3,numel(nrand));
-      for m = nrand(:)'
-        fprintf('performing permutation %d/%d\n',find(m==nrand),numel(nrand));
-        cnt = cnt + 1;
-        paramdir = '/project/3011020.09/jansch/mscca_group/';
-        load(fullfile(paramdir,'params',sprintf('shuff_sce%d_indx%04d%s',scenario,m,suffix))); % use precomputed ordering for consistency across parcels
-        
-        groupdatashuf(selaudio) = mous_multisetcca_reorderaudio(subj(selaudio), subjectdata(selaudio), subjecttiming(selaudio), groupinfo, reorder, stimid, shift, stretch);
-        
-        for k = 1:numel(groupdatashuf)
-          for kk = 1:numel(groupdatashuf{1,k}.trial)
-            sel = nearest(groupdatashuf{1,k}.time{kk},-0.1);
-            groupdatashuf{1,k}.trial{kk} = groupdatashuf{1,k}.trial{kk}(:,sel:end);
-            groupdatashuf{1,k}.time{kk}  = groupdatashuf{1,k}.time{kk}(sel:end);
-          end
-        end
-        % perform the cca
-        tmpdata                              = mous_multisetcca_groupdata2singlestruct(groupdatashuf, subj);
-        [Wshuf, Ashuf, rhoshuf, ~, compshuf] = mous_multisetcca(tmpdata, nfold, 4, [], false);
-        [compshuf, rhoshuf]         = mous_multisetcca_postprocess(compshuf, rhoshuf, source_parc.label{parcel_indx});
-        
-        % compute coherence etc
-        [cohshufstim, cohshuf] = mous_multisetcca_coh(compshuf);
-        trctmp                 = mous_multisetcca_trc(compshuf, stimuli);
-        Rshuf(1,1,cnt)         = single(mean(mean(rhoshuf(selvis,selvis,1))))-1./numel(selvis);
-        Rshuf(1,2,cnt)         = single(mean(mean(rhoshuf(selvis,selaudio,1))));
-        Rshuf(2,1,cnt)         = single(mean(mean(rhoshuf(selaudio,selvis,1))));
-        Rshuf(2,2,cnt)         = single(mean(mean(rhoshuf(selaudio,selaudio,1))))-1./numel(selaudio);
-        
-        if cnt==1
-          trcshuf = trctmp;
-        else
-          trcshuf.rho(:,:,cnt) = trctmp.rho;
-        end
-                
-        tmpCshuf       = cohshuf.cohspctrm;
-        Cshuf(:,1,cnt) = mean(mean(tmpCshuf(selvis,selvis,:,:)))-1./numel(selvis);
-        Cshuf(:,2,cnt) = mean(mean(tmpCshuf(selaudio,selaudio,:,:)))-1./numel(selaudio);
-        Cshuf(:,3,cnt) = mean(mean(tmpCshuf(selvis,selaudio,:,:)));
-      
-        tmpCshufstim       = cohshufstim.cohspctrm;
-        Cshufstim(:,1,cnt) = mean(abs(tmpCshufstim(selvis,:,:)));
-        Cshufstim(:,2,cnt) = mean(abs(tmpCshufstim(selaudio,:,:)));
-      end
-      
-      
-      foi   = cohshuf(1).freq;
-      savedir = sprintf('/project/3011020.09/jansch/mscca_group/scenario%d',scenario);
-      filename = fullfile(savedir, sprintf('mscca_sce%d_parcel%03dshuf2%s',scenario,parcel_indx,suffix));
-      if exist([filename,'.mat'], 'file')
-        tmp = load(filename);
-        Cshuf = cat(3,tmp.Cshuf,Cshuf);
-        Rshuf = cat(3,tmp.Rshuf,Rshuf);
-        Cshufstim = cat(3,tmp.Cshufstim,Cshufstim);
-        trcshuf.rho = cat(3,tmp.trcshuf.rho, trcshuf.rho);
-      end
-      save(filename,'Rshuf','Cshuf', 'foi', 'Cshufstim','trcshuf');
-    
-  end
+  save(sprintf('/project/3011085.04/data/derived/mscca/mscca_parcel%03d',parcel_indx),'trc','trc_pca', 'trf', 'trf_pca', 'comp', 'lambda', 'rho');
+
 end
 %--------------------------------------------------------------------------
 toc;
