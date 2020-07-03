@@ -5,7 +5,7 @@ function [data, audio, featuredata] = vsm_preprocessing(subject, inpcfg)
 
 % try whether this solves the problems with finding fftfilt when running it
 % in a torque job
-addpath('/opt/matlab/R2014b/toolbox/signal/signal');
+%addpath('/opt/matlab/R2014b/toolbox/signal/signal');
 
 %% INITIALIZE
 
@@ -134,7 +134,7 @@ for k = 1:numel(seltrl)
   cfg.trl     = trl(k,:);
   cfg.trl(1,1) = cfg.trl(1,1) - 1200; % read in an extra second of data at the beginning
   cfg.trl(1,2) = cfg.trl(1,2) + 1200; % read in an extra second of data at the end
-  cfg.trl(1,3) = -1200; % update the offset, to account for the padding
+  cfg.trl(1,3) = cfg.trl(1,3) - 1200; % update the offset, to account for the padding
   cfg.channel  = 'MEG';
   cfg.continuous = 'yes';
   cfg.demean     = 'yes';
@@ -215,13 +215,15 @@ for k = 1:numel(seltrl)
   
 %% ARTIFACT REJECTION
   
-  % reject muscle & SQUID artifacts
-  cfg                        = [];
-  cfg.artfctdef              = subject.artfctdef;
-  cfg.artfctdef.reject       = 'nan';
-  cfg.artfctdef.minaccepttim = 2;
-  data                       = ft_rejectartifact(cfg, data);
-  audio                      = ft_rejectartifact(cfg, audio);
+  if isfield(subject, 'artfctdef')
+    % reject muscle & SQUID artifacts
+    cfg                        = [];
+    cfg.artfctdef              = subject.artfctdef;
+    cfg.artfctdef.reject       = 'nan';
+    cfg.artfctdef.minaccepttim = 2;
+    data                       = ft_rejectartifact(cfg, data);
+    audio                      = ft_rejectartifact(cfg, audio);
+  end
   
   % sensor noise suppression
   if dosns
@@ -235,13 +237,14 @@ for k = 1:numel(seltrl)
   end
 
   % Remove eye-related artifacts
+  if isfield(subject, 'ica')
+    fprintf('Removing ICA components for story %d ...\n\n', k);
   
-  fprintf('Removing ICA components for story %d ...\n\n', k);
-  
-  cfg            = [];
-  cfg.component  = sort([subject.ica.compsel{k}.eye, subject.ica.compsel{k}.heart]); % select badcomponents for this story
-  cfg.updatesens = 'no';
-  data           = ft_rejectcomponent(cfg, subject.ica.comp{k}, data);
+    cfg            = [];
+    cfg.component  = sort([subject.ica.compsel{k}.eye, subject.ica.compsel{k}.heart]); % select badcomponents for this story
+    cfg.updatesens = 'no';
+    data           = ft_rejectcomponent(cfg, subject.ica.comp{k}, data);
+  end
   
 %% LOW PASS FILTERING
   
@@ -307,7 +310,7 @@ for k = 1:numel(seltrl)
       combineddata = add_subtlex(combineddata, subtlex_data,  subtlex_firstrow);
         
       % create semantic distance field in combineddata
-      vector_file        = fullfile('/project/3011044.02/preproc/stimuli/vectors', [f '.txt']);
+      vector_file        = fullfile('/project/3011085.04/data/stim/txt/vectors', [f '.txt']);
       [vecmat, words]    = vsm_readvectors(vector_file);
       
       vec2dist_selection = [combineddata(:).iscontent]';
@@ -335,7 +338,7 @@ for k = 1:numel(seltrl)
       cfg.feature        = feature(~ismember(feature, {'embedding', 'duration'})); % don't shift vectors and duration values
       [combineddata, control_feature] = vsm_shiftdata(cfg, combineddata);
       
-      feature_sel = [feature control_feature']; % add control feature labels
+      feature_sel = [feature(:); control_feature(:)]; % add control feature labels
       
       % create language predictor based on language model output
       if iscell(feature_sel)
