@@ -56,6 +56,28 @@ if domscca_searchlight
     load(fullfile('/project/3011085.04/data/derived',sprintf('%s_lng-box',  subj(k).name)));
     load(fullfile('/project/3011085.04/data/derived',sprintf('%s_lcmv-filt',subj(k).name)));
     
+    % NOTE JM JULY 04, 2020: THERE SEEMS SOMETHING CRITICALLY WRONG WITH
+    % THE TEMPORAL ALIGNMENT, DUE TO THE DELAY CORRECTION BETWEEN AUDIO
+    % TRIGGER AND ACTUAL AUDIO BEING LOST IN THE PREPROCESSING STEP. THE
+    % DELAYS NEED TO BE MANUALLY CORRECTED. ASSUMING THAT THE SAME
+    % MISALGINMENT APPLIES TO THE FEATUREDATA, DATA, AND AUDIO VARIABLES,
+    % BASED ON INSPECTION OF THE AUDIO TIME AXES, IT SEEMS THAT THE DELAYS
+    % NEED TO BE SUBTRACTED FROM THE TRIAL SPECIFIC TIME AXES. THIS ALIGNS
+    % THE AUDIO ENVELOPES ACROSS SUBJECTS. NOTE, ALSO, THAT THE CODE
+    % VSM_PREPROCESSING HAS BEEN FIXED (SO A POTENTIAL NEW ROUND OF
+    % PREPROCESSING WOULD YIELD CORRECT DELAY CORRECTION), BUT DUE TO
+    % PRACTICAL CONSTRAINTS, THIS STEP HAS NOT BEEN REDONE. THIS MEANS THAT
+    % THE CURRENT DATA ON DISK IS NOT CORRECTLY DELAY ADJUSTED AND THE NEXT
+    % STEP SHOULD BE APPLIED. IF THIS CURRENT PIPELINE IS TO BE RUN WITH
+    % NEWLY COMPUTED DATA, THE FOLLOWING STEP NEEDS TO BE SKIPPED.
+    load(fullfile('/project/3011085.04/data/derived',sprintf('%s_delay',subj(k).name)));
+    for kk = 1:numel(data.time)
+      data.time{kk}        = data.time{kk}        - delay(kk)./1000;
+      featuredata.time{kk} = featuredata.time{kk} - delay(kk)./1000;
+      audio.time{kk}       = audio.time{kk}       - delay(kk)./1000;
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     source_parc.filterlabel = data.label; % for checking channel order, assumes same order in the filters
     
     subjectdata{1,k} = vsm_multisetcca_sensor2parcel(data, source_parc, parcel_indx);
