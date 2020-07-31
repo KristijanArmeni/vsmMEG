@@ -17,7 +17,7 @@ end
 d = d(sel);
 label = atlas.parcellationlabel(sel);
 
-for k = 2:22
+for k = 1:22
   cfgsel = [];
   for m = 1:numel(d)
     load(d(m).name,'comp');

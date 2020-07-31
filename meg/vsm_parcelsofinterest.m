@@ -1,4 +1,4 @@
-function [C, label, P, list, lay] = vsm_parcelsofinterest
+function [label, lay, P] = vsm_parcelsofinterest
 
 % this function is meant to keep track how the parcelsofinterest are defined
 % for the MEG based connectivity analysis dfi.
@@ -62,13 +62,13 @@ for k = 1:numel(plist)*2
       label(sel(1)) = {[label{sel(1)}(1:5) '01']};
       label(sel(2)) = {[label{sel(1)}(1:5) '02']};
     case '44'
-      label(sel) = {[label{sel(1)}(1:5) '01']};
+      label(sel) = {[label{sel(1)}(1:4)]};
     case '45'
-      label(sel) = {[label{sel(1)}(1:5) '01']};
+      label(sel) = {[label{sel(1)}(1:4)]};
     case '46'
-      label(sel) = {[label{sel(1)}(1:5) '01']};
+      label(sel) = {[label{sel(1)}(1:4)]};
     case '47'
-      label(sel) = {[label{sel(1)}(1:5) '01']};
+      label(sel) = {[label{sel(1)}(1:4)]};
     otherwise
   end
 end
@@ -158,6 +158,14 @@ cfg.rho = [6:5:21 31:5:46 56:5:86 96:5:151 161:5:171];
 cfg.rho = [cfg.rho 360-flip(cfg.rho)];
 cfg.layout = 'circular';
 lay = ft_prepare_layout(cfg);
+
+
+P = zeros(numel(lay.label),size(label,1));
+for k = 1:numel(lay.label)
+  P(k, strcmp(label(:,1), lay.label{k})) = 1;
+end
+P = P./sum(P,2);
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

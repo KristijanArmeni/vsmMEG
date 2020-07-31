@@ -76,6 +76,7 @@ if domscca_searchlight
       featuredata.time{kk} = featuredata.time{kk} - delay(kk)./1000;
       audio.time{kk}       = audio.time{kk}       - delay(kk)./1000;
     end
+    clear delay
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     source_parc.filterlabel = data.label; % for checking channel order, assumes same order in the filters
@@ -128,7 +129,7 @@ if domscca_searchlight
         Tmin(m,1) = subjectdata{k}.trialinfo(m,2);
       else
         Tmax(m) = max(Tmax(m), subjectdata{k}.trialinfo(m,3));
-        Tmin(m) = max(Tmin(m), subjectdata{k}.trialinfo(m,2));
+        Tmin(m) = min(Tmin(m), subjectdata{k}.trialinfo(m,2));
       end
     end
   end
@@ -138,7 +139,8 @@ if domscca_searchlight
     for m = 1:numel(subjectdata{k}.time)
       tim = (Tmin(m):1./subjectdata{k}.fsample:Tmax(m));
       i1  = nearest(tim, round(subjectdata{k}.time{m}(1).*subjectdata{k}.fsample)./subjectdata{k}.fsample) - 1; % number of padded samples to the left
-      i2  = numel(tim) - nearest(tim, round(subjectdata{k}.time{m}(end).*subjectdata{k}.fsample)./subjectdata{k}.fsample) - i1; % number of padded samples to the right
+      %i2  = numel(tim) - nearest(tim, round(subjectdata{k}.time{m}(end).*subjectdata{k}.fsample)./subjectdata{k}.fsample) - i1; % number of padded samples to the right
+      i2 = numel(tim)-i1-size(subjectdata{k}.trial{m},2);
       nchan = numel(subjectdata{k}.label);
       
       subjectdata{k}.time{m} = tim;
