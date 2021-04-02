@@ -24,6 +24,10 @@ for k = 1:numel(stimdata)
   tmp.time = (-14:75)./tmp.fsample;
   tmpstim = stimdata{k};
   
+  % constrain the words to the ones that fit within the trial's time axis
+  sel = [tmpstim.start_time]>data.time{k}(1) & [tmpstim.start_time]<data.time{k}(end);
+  tmpstim = tmpstim(sel);
+  
   start = [tmpstim.start_time];
   sel   = isfinite(start);
   start = start(sel);

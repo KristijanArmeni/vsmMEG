@@ -12,7 +12,7 @@ dirs.streams    = fullfile(dirs.home, 'streams');
 
 % data directories
 dirs.data       = fullfile(dirs.home, 'data');
-dirs.raw        = fullfile(dirs.data, 'raw');
+dirs.raw        = fullfile('/.repo/dccn/DAC_3011044.02_628:v1/raw');
 dirs.meg        = fullfile(dirs.data, 'derived');
 dirs.preproc    = dirs.meg;
 dirs.audio      = fullfile(dirs.data, 'stim', 'audio');
@@ -27,7 +27,7 @@ dirs.trf      = fullfile(dirs.analysis, 'trf');
 dirs.results  = fullfile(dirs.home, 'results');
 
 % atlases
-dirs.atlas = {fullfile(dirs.streams, 'preproc', '/atlas/374/atlas_subparc374_8k.mat');
+dirs.atlas = {fullfile('/project/3011085.05/data/atlas','atlas_subparc374_8k.mat');
               fullfile(dirs.streams, 'preproc', '/atlas/atlas_MSMAll_8k_subparc.mat');
               fullfile(dirs.streams, 'preproc', '/atlas/cortex_inflated_shifted.mat');
               fullfile(dirs.streams, 'preproc', '/atlas/cortex_inflated.mat')};

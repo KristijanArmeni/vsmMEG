@@ -139,8 +139,8 @@ data.label = source_parc.label;
 
 %data_sensor = rmfield(data, 'cfg'); % remove the cfg which might be bulky
 
-save(fullfile(d.preproc, [subject.name '_lcmv-filt.mat']), 'source_parc', '-v7.3');
-save(fullfile(d.preproc, [subject.name '_lcmv-data.mat']), 'data', '-v7.3');
+save(fullfile(d.preproc, [subject.name '_lcmv-filt.mat']), 'source_parc');
+%save(fullfile(d.preproc, [subject.name '_lcmv-data.mat']), 'data');
 
 
 end

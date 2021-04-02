@@ -84,7 +84,16 @@ for k = 1:ntier
     % check if there is a fullstop at the end of the word
     % if so, remove it and add the fullstop as the next word in column
     word = fgetl(file_id);
-    if strcmp(word(end-1), '.')
+    if numel(word)>=3 && strcmp(word((end-2):(end-1)), '..')
+      word = strrep(word, '...', '');     % remove the dot
+      words{index, 1} = word;           % remove the quotation marks
+      
+      index = index + 1;
+      times(index, 1) = times(index-1, 2);  % NOT a typo..
+      times(index, 2) = times(index-1, 2);
+      words{index, 1} = '...';
+    
+    elseif strcmp(word(end-1), '.')
       word = strrep(word, '.', '');     % remove the dot
       words{index, 1} = word;           % remove the quotation marks
       
@@ -92,6 +101,14 @@ for k = 1:ntier
       times(index, 1) = times(index-1, 2);  % NOT a typo..
       times(index, 2) = times(index-1, 2);
       words{index, 1} = '.';
+    elseif strcmp(word(end-1), '?')
+      word = strrep(word, '?', '');     % remove the dot
+      words{index, 1} = word;           % remove the quotation marks
+      
+      index = index + 1;
+      times(index, 1) = times(index-1, 2);  % NOT a typo..
+      times(index, 2) = times(index-1, 2);
+      words{index, 1} = '?';
       
     else
       words{index, 1} = word;           % remove the quotation marks

@@ -20,14 +20,14 @@ for k = 1:numel(d)
   sel  = find(contains(comp.label,subjectname));
   comp.trial = cellrowselect(comp.trial, sel);
   comp.label = atlas.parcellationlabel(str2double(d(k).name(13:15)));
-  tmp{k} = rmfield(comp, 'audiofile');
+  tmp{k} = removefields(comp, {'audiofile' 'unmixing' 'topo'});
   
   sel  = find(contains(trf.label,subjectname));
   b    = cat(3,trf.weights.beta);
   p    = cat(2,trf.weights.performance);
   r    = cat(2,trf.weights.rho);
   
-  tmp2{k}.label = comp.label;!rm *.o
+  tmp2{k}.label = comp.label;
   tmp2{k}.time  = trf.weights(1).time;
   tmp2{k}.reflabel    = trf.weights(1).reflabel;
   tmp2{k}.beta        = mean(b(sel,:,:),3);
@@ -47,6 +47,8 @@ for k = 1:numel(d)
   tmp3{k}.rho         = mean(r(sel,:),2);
   
 end
+
+ft_warning off;
 
 cfg = [];
 cfg.appenddim = 'chan';

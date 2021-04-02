@@ -15,16 +15,24 @@ end
 rng(rseed);
 
 for k = 1:numel(sname)
-  [s, f] = vsm_dfi_getsourcedata(sname{k});
+  [s, f] = vsm_dfi_getsourcedata(sname{k},1,k);
   
   cfg.channel = testfeature;
   f           = ft_selectdata(cfg, f);
   f.time      = s.time;
   
-  if ~doshuf
-    s           = ft_appenddata([], s, vsm_feature_roughen(f));
+  if ~isequal(testfeature, 'audio_avg')
+    if ~doshuf
+      s = ft_appenddata([], s, vsm_feature_roughen(f));
+    else
+      s = ft_appenddata([], s, vsm_feature_roughen(vsm_feature_plateau2shuff(f)));
+    end
   else
-    s           = ft_appenddata([], s, vsm_feature_roughen(vsm_feature_plateau2shuff(f)));
+    if ~doshuf
+      s = ft_appenddata([], s, f);
+    else
+      keyboard
+    end
   end
   
   cfg             = [];

@@ -1,7 +1,56 @@
 
 load(fullfile('/project/3011085.04/data/derived/mscca',sprintf('%s_sourcedata_mscca',subj.name)));
-load(fullfile('/project/3011085.04/data/derived/mscca','AUDIODATA'))
-sourceata = data;
+%load(fullfile('/project/3011085.04/data/derived/mscca','AUDIODATA'))
+load(fullfile('/project/3011085.04/data/derived/mscca','AUDIODATA_box'))
+
+
+% This chunk must be uncommented if the AUDIODATA_BOX is loaded
+kk = [1 2 3 4 4 5 5];
+for k = 1:numel(data.trial)
+  sel1 = nearest(audiodata.time{kk(k)}, data.time{k}(1));
+  sel2 = nearest(audiodata.time{kk(k)}, data.time{k}(end));
+  trial{1,k} = audiodata.trial{kk(k)}(:,sel1:sel2);
+  time{1,k}  = audiodata.time{kk(k)}(sel1:sel2); 
+end
+  
+if numel(audiodata.trial)~=numel(data.trial)
+  audiodata = vsm_splitlongtrials(audiodata);
+end
+audiodata.trial = trial;
+audiodata.time  = time;
+
+% This chunk must be uncommented if the AUDIODATA is loaded
+%if numel(audiodata.trial)~=numel(data.trial)
+%  audiodata = vsm_splitlongtrials(audiodata);
+%end
+% if numel(audiodata.time{1})~=numel(data.time{1})
+%   % there was a different number of shifts in the mscca, versus the number
+%   % of shifts used to truncate the time axis of the audiodata, this needs
+%   % to be adjusted. Here it is assumed that the adjustment is the same for each of the
+%   % original trials, i.e. chopping off 2 samples on each end, OF THE
+%   % ORIGINAL TRIALS. This means that the originally longer trials need to
+%   % be adjusted only on one side.
+%   sel1 = 3;
+%   sel2 = 2;
+%   
+%   for k = 1:numel(data.trial)
+%     if k==1||k==2||k==3
+%       data.trial{k} = data.trial{k}(:,sel1:(end-sel2));
+%       data.time{k}  = data.time{k}(sel1:(end-sel2));
+%     elseif k==4||k==6
+% 
+%       data.trial{k} = data.trial{k}(:,3:end);
+%       data.time{k}  = data.time{k}(3:end);
+%       audiodata.trial{k} = audiodata.trial{k}(:,1:(end-4));
+%       audiodata.time{k}  = audiodata.time{k}(1:(end-4));
+%     elseif k==5||k==7
+%       data.trial{k} = data.trial{k}(:,1:(end-2));
+%       data.time{k}  = data.time{k}(1:(end-2));
+%       audiodata.trial{k} = audiodata.trial{k}(:,5:end);
+%       audiodata.time{k}  = audiodata.time{k}(5:end);
+%     end
+%   end
+% end
 
 atlasfile = fullfile('/project/3011085.05/data/atlas','atlas_subparc374_4k.mat');
 load(atlasfile);
@@ -23,6 +72,7 @@ featuredata_orig = audiodata;
 selchan = find(contains(featuredata_orig.label,'perpl'));
 for k = 1:numel(featuredata_orig.trial)
   featuredata_orig.trial{k}(selchan,:) = log10(featuredata_orig.trial{k}(selchan,:));
+  featuredata_orig.trial{k}(selchan,~isfinite(featuredata_orig.trial{k}(selchan,:))) = 0;  
 end
 
 if ~exist('testfeature', 'var')

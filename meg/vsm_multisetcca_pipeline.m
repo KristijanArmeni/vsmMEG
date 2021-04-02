@@ -2,8 +2,8 @@
 ft_hastoolbox('cellfunction', 1);
 
 
-subj = {'s02','s03','s04','s07',...
-        's11','s12','s13','s14','s15','s16',...
+subj = {'s02','s03','s04','s05','s07','s08',...
+        's10','s11','s12','s13','s14','s15','s16',...
         's17','s18','s19','s20','s21','s22',...
         's23','s24','s25','s26','s27','s28'};
 
@@ -70,24 +70,27 @@ if domscca_searchlight
     % THE CURRENT DATA ON DISK IS NOT CORRECTLY DELAY ADJUSTED AND THE NEXT
     % STEP SHOULD BE APPLIED. IF THIS CURRENT PIPELINE IS TO BE RUN WITH
     % NEWLY COMPUTED DATA, THE FOLLOWING STEP NEEDS TO BE SKIPPED.
-    load(fullfile('/project/3011085.04/data/derived',sprintf('%s_delay',subj(k).name)));
-    for kk = 1:numel(data.time)
-      data.time{kk}        = data.time{kk}        - delay(kk)./1000;
-      featuredata.time{kk} = featuredata.time{kk} - delay(kk)./1000;
-      audio.time{kk}       = audio.time{kk}       - delay(kk)./1000;
-    end
-    clear delay
+    %
+    % AS OF APRIL 1, 2021 the data have been recomputed, so the following
+    % is not necessary anymore
+% %     load(fullfile('/project/3011085.04/data/derived',sprintf('%s_delay',subj(k).name)));
+% %     for kk = 1:numel(data.time)
+% %       data.time{kk}        = data.time{kk}        - delay(kk)./1000;
+% %       featuredata.time{kk} = featuredata.time{kk} - delay(kk)./1000;
+% %       audio.time{kk}       = audio.time{kk}       - delay(kk)./1000;
+% %     end
+% %     clear delay
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     source_parc.filterlabel = data.label; % for checking channel order, assumes same order in the filters
     
-    subjectdata{1,k} = vsm_multisetcca_sensor2parcel(data, source_parc, parcel_indx);
+    subjectdata{1,k} = vsm_multisetcca_sensor2parcel(data, source_parc, parcel_indx, 5);
     
     cfg = [];
     cfg.channel = 'audio_avg';
     audio = ft_selectdata(cfg, audio);
     
-    cfg.channel = {'entropy';'entropy_c';'perplexity';'perplexity_c';'log10wf';'log10wf_c'};
+    cfg.channel = {'entropy';'perplexity';'log10wf'};
     featuredata = ft_selectdata(cfg, featuredata);
     
     subjectdata{1,k} = ft_appenddata([], subjectdata{1,k}, audio, featuredata);
@@ -148,7 +151,9 @@ if domscca_searchlight
 
     end
   end
-      
+  
+  
+  clear audiodata
   for k = 1:numel(subjectdata)
     cfg = [];
     cfg.channel = {'audio_avg';'entropy';'perplexity';'log10wf'};
@@ -167,9 +172,15 @@ if domscca_searchlight
     subjectdata{k}.audiofile = audiofile;
   end
   
+  % split the longer stories into two chunks
+  for k = 1:numel(subjectdata)
+    subjectdata{k} = vsm_splitlongtrials(subjectdata{k});
+    audiodata{k}   = vsm_splitlongtrials(audiodata{k});
+  end
+ 
   for k = 1:numel(subjectdata)
     % do the time shifting trick for the hyperalignment
-    lags = -6:6;
+    lags = -4:4;
     subjectdata{k}.trial = cellshift(subjectdata{k}.trial, lags, 2, [], 'overlap');
     subjectdata{k}.time  = cellshift(subjectdata{k}.time, 0, 2, [abs(min(lags)) abs(max(lags))], 'overlap');
     subjectdata{k}.label = repmat(subjectdata{k}.label(1:5),numel(lags),1);
@@ -187,15 +198,24 @@ if domscca_searchlight
   tmpdata              = vsm_multisetcca_groupdata2singlestruct(subjectdata, {subj.name});
   tmpdata.cfg          = rmfield(tmpdata.cfg, 'previous'); % this removes a rather big cfg that accumulates across folds
   
-  lambda = 5;
-  [W, A, rho, C, comp] = vsm_multisetcca(tmpdata, {1 2 3 4 5}, 1, lambda,false);
-  [comp, rho]          = vsm_multisetcca_postprocess(comp, rho, source_parc.label{parcel_indx});
-  comp.audiofile       = subjectdata{1}.audiofile;
+  lambda = 0.5;
+  for k = 1:numel(tmpdata.trial)
+    tmpdata.trial{k} = tmpdata.trial{k} - nanmean(tmpdata.trial{k}, 2);
+  end
+  %[W, A, rho, C, comp] = vsm_multisetcca(tmpdata, {1 2 3 4 5 6 7}, 1, lambda,false);
+  %audiofile = comp.audiofile;
+  %[comp, rho]          = vsm_multisetcca_postprocess(comp, rho, source_parc.label{parcel_indx});
+  %comp.audiofile       = audiofile;
+  
+  [W, A, rho, comp] = vsm_multisetcca_adaptive(tmpdata, lambda);
+  comp.unmixing = W;
+  comp.mixing   = A;
+  
   [tlck, stimdata]     = vsm_extractwords(comp);
   
   % now also extract the the 'tlck' for tmpdata (first component only)
   tmpcfg = [];
-  tmpcfg.channel = tmpdata.label(31:65:end); % hard coded
+  tmpcfg.channel = tmpdata.label(21:45:end); % hard coded
   tmpdata_tmp    = ft_selectdata(tmpcfg, tmpdata);  
   [tlck_pca]     = vsm_extractwords(tmpdata_tmp);
   
@@ -233,12 +253,12 @@ if domscca_searchlight
   % now we need to match the comp's time with that of the independent
   % variables
   for k = 1:numel(audiodata.time)
-    audiodata.time{k} = audiodata.time{k}(7:end-6); % the numbers here should match the lags
-    audiodata.trial{k} = audiodata.trial{k}(:,7:end-6); % the numbers here should match the lags
+    audiodata.time{k} = audiodata.time{k}(5:end-4); % the numbers here should match the lags
+    audiodata.trial{k} = audiodata.trial{k}(:,5:end-4); % the numbers here should match the lags
   
   end
   
-  audiodata.audiofile = audiofile;
+  audiodata.audiofile = comp.audiofile;
   audiodata.fsample   = comp.fsample;
   [tlck_audio]     = vsm_extractwords(audiodata);
   cfg = [];
@@ -254,7 +274,7 @@ if domscca_searchlight
   
   cfg = [];
   cfg.method     = 'mlrridge';
-  cfg.threshold  = [10 0];
+  cfg.threshold  = [2 0];
   cfg.reflags    = (-5:59)./100;
   cfg.refchannel = audiodata.label([1]);% 3]);
   cfg.demeandata = 'yes';
@@ -262,7 +282,7 @@ if domscca_searchlight
   cfg.standardisedata = 'yes';
   cfg.standardiserefdata = 'yes';
   cfg.performance = 'r-squared';
-  cfg.output      = 'model';
+  cfg.output      = 'residual';
   cfg.testtrials  = mat2cell(1:numel(comp.trial),1,ones(1,numel(comp.trial)));
   trf     = ft_denoise_tsr(cfg, removefields(comp,        {'audiofile' 'trialinfo'}), removefields(audiodata,'audiofile'));
   trf_pca = ft_denoise_tsr(cfg, removefields(tmpdata_tmp, {'audiofile' 'trialinfo'}), removefields(audiodata,'audiofile'));

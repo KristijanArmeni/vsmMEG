@@ -4,7 +4,13 @@ sname = {'s02','s03','s04','s07',...
         's23','s24','s25','s26','s27','s28'};
       
       
-testfeature = 'log10wf';
+%testfeature = 'entropy';
+% nrand = 25;
+% for k = 1:numel(sname)
+%   subj.name = sname{k};
+%   qsubfeval('vsm_execute_pipeline','vsm_dfi_mscca', {'subj' subj}, {'computethr' true}, {'testfeature' testfeature}, {'nrand' nrand}, 'memreq',16*1024^3,'timreq',300*60,'batchid',sprintf('%s_%03d',subj.name,subindx));
+% end
+      
 nrand = 40;
 subs = (1:50);
 for k = 1:numel(sname)

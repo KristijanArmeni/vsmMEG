@@ -23,7 +23,7 @@ subject.montage.labelorg = {'EEG057';'EEG058';'EEG059'};
 subject.montage.labelnew = {'EOGh';  'EOGv';  'ECG'};
 subject.montage.tra      = eye(3);
 
-subject_rawdir   = fullfile('/project/3011085.04/data/raw/', subjectdir);
+subject_rawdir   = fullfile(vsmdir.raw, subjectdir);
 subject.mridir    = '/project/3011044.02/data/mri';
 subject.audiodir  = vsmdir.audio;
 
@@ -32,13 +32,13 @@ meg_sessions = dir(fullfile(subject_rawdir, 'ses-meg*'));
 meg_sessions = {meg_sessions.name}';
 mri_sessions = dir(fullfile(subject_rawdir, 'ses-mri*'));
 mri_sessions = {mri_sessions.name}';
-if isempty(meg_sessions) && isempty(mri_sessions)
-    error('Cannot find meg and mri subdirectories in %s. Check please.', subject_rawdir)
-elseif isempty(meg_sessions)
-    error('Cannot find meg subdirectory in %s. Check please.', subject_rawdir)
-elseif isempty(mri_sessions)
-    warning('Cannot find mri subdirectories in %s.', subject_rawdir)
-end
+% if isempty(meg_sessions) && isempty(mri_sessions)
+%     error('Cannot find meg and mri subdirectories in %s. Check please.', subject_rawdir)
+% elseif isempty(meg_sessions)
+%     error('Cannot find meg subdirectory in %s. Check please.', subject_rawdir)
+% elseif isempty(mri_sessions)
+%     warning('Cannot find mri subdirectories in %s.', subject_rawdir)
+% end
 
 if numel(meg_sessions) == 1
     subject.datadir = char(fullfile(subject_rawdir, meg_sessions{1}));
@@ -474,44 +474,44 @@ if str2double(name(2:end)) >= 11
   subject.audiofile(:, end) = subject.audiofile(subject.trl(:, end)./10); % create one-valued ints
 end    
     
-% % get squid artifacts
-% cfg = streams_artifact_squidjumps(subject);
-% if ~iscell(cfg)
-%   subject.artfctdef.squidjumps = cfg.artfctdef.zvalue;
-% else
-%   for k = 1:numel(cfg)
-%     subject.artfctdef.squidjumps{k} = cfg{k}.artfctdef.zvalue;
-%   end
-% end
-%   
-% % get muscle artifacts
-% cfg = streams_artifact_muscle(subject);
-% if ~iscell(cfg)
-%   subject.artfctdef.muscle = cfg.artfctdef.zvalue;
-% else
-%   for k = 1:numel(cfg)
-%     subject.artfctdef.muscle{k} = cfg{k}.artfctdef.zvalue;
-%   end
-% end
+% get squid artifacts
+cfg = streams_artifact_squidjumps(subject);
+if ~iscell(cfg)
+  subject.artfctdef.squidjumps = cfg.artfctdef.zvalue;
+else
+  for k = 1:numel(cfg)
+    subject.artfctdef.squidjumps{k} = cfg{k}.artfctdef.zvalue;
+  end
+end
+  
+% get muscle artifacts
+cfg = streams_artifact_muscle(subject);
+if ~iscell(cfg)
+  subject.artfctdef.muscle = cfg.artfctdef.zvalue;
+else
+  for k = 1:numel(cfg)
+    subject.artfctdef.muscle{k} = cfg{k}.artfctdef.zvalue;
+  end
+end
 % 
-% % Do component analysis per story
-% %subject.ica.comp    = vsm_fastica(subject);
-% 
-% % Load selected components
-% compsel = fullfile(vsmdir.preproc, [subject.name '_compsel.mat']);
-% if exist(compsel, 'file')
-%     load(compsel);
-%     subject.ica.compsel = compsel;
-% else
-%     subject.ica.compsel = [];
-% end
-% compsel = fullfile(vsmdir.preproc, [subject.name '_comp.mat']);
-% if exist(compsel, 'file')
-%     load(compsel);
-%     subject.ica.comp = comp;
-% else
-%     subject.ica.comp = [];
-% end
+% Do component analysis per story
+subject.ica.comp    = vsm_fastica(subject);
+
+% Load selected components
+compsel = fullfile(vsmdir.preproc, [subject.name '_compsel.mat']);
+if exist(compsel, 'file')
+    load(compsel);
+    subject.ica.compsel = compsel;
+else
+   subject.ica.compsel = [];
+end
+compsel = fullfile(vsmdir.preproc, [subject.name '_comp.mat']);
+if exist(compsel, 'file')
+    load(compsel);
+    subject.ica.comp = comp;
+else
+    subject.ica.comp = [];
+end
 
 % estimate the delay between the audio signal in the data, and the wav-file
 delay         = streams_audiodelay(subject);

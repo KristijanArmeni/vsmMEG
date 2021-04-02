@@ -1,12 +1,15 @@
-function [s, f] = vsm_dfi_getsourcedata(subjectname, subsetflag) 
+function [s, f] = vsm_dfi_getsourcedata(subjectname, subsetflag, audio_indx) 
 
-if nargin<2
+if nargin<2 || isempty(subsetflag)
   subsetflag = 1;
+end
+if nargin<3
+  error('an audio_indx should be provided');
 end
 
 datadir = '/project/3011085.04/data/derived/mscca';
 load(fullfile(datadir,sprintf('%s_sourcedata_mscca',subjectname)));
-load(fullfile(datadir,'AUDIODATA'))
+load(fullfile(datadir,'AUDIODATA_all'))
 
 if subsetflag>0
   
@@ -31,9 +34,21 @@ else
 end
 
 s  = sourcedata;
-f  = audiodata;
+%f  = audiodata;
+f  = audiodata{audio_indx};
+if numel(f.trial)~=numel(s.trial)
+  f = vsm_splitlongtrials(f);
+end
 
 selchan = find(contains(f.label,'perpl'));
 for k = 1:numel(f.trial)
   f.trial{k}(selchan,:) = log10(f.trial{k}(selchan,:));
+end
+
+% check the time axes
+for k = 1:numel(f.trial)
+  begs = nearest(f.time{k}, s.time{k}(1));
+  ends = nearest(f.time{k}, s.time{k}(end));
+  f.time{k} = f.time{k}(begs:ends);
+  f.trial{k} = f.trial{k}(:,begs:ends);
 end

@@ -15,9 +15,12 @@ selaudio = cell(0,1);
 for k = 1:numel(audiofile)
 
   tmp = contains(subject.audiofile, audiofile{k}); % check which audiofiles were selected by the user
-  if sum(tmp)==1
-    seltrl   = cat(1, seltrl, find(tmp));
-    selaudio = cat(1, selaudio, subject.audiofile(tmp)); 
+  if sum(tmp)>0
+    if all(ismember(find(tmp),seltrl))
+    else
+      seltrl   = cat(1, seltrl, find(tmp));
+      selaudio = cat(1, selaudio, subject.audiofile(tmp)); 
+    end
   else
     % file is not there
   end
